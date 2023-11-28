@@ -6,34 +6,61 @@ public class Application {
     public static void main(String[] args) throws SQLException, IOException {
         Scanner scanner = new Scanner(System.in);
         OSS oss = new OSS();
-
+        boolean loginFlag = false;
         while (true) {
-            System.out.println("========================================");
-            System.out.println("Welcome to PolyShop, a friendly online shopping system");
-            System.out.println("========================================");
-            System.out.println("Please choose from the following options:");
+            System.out.println("\nPlease choose from the following options:");
             System.out.println("1. Login");
             System.out.println("2. Create Account");
             System.out.println("0. Close App");
             System.out.print(">> ");
             String input = scanner.nextLine();
-            System.out.println();
             if (input.equals("0")) {
                 oss.closeApp();
                 break;
             }
             switch (input) {
                 case "1":
-                    oss.loginAccount();
+                    loginFlag = oss.loginAccount();
                     break;
                 case "2":
-                    oss.createAccount();
+                    loginFlag = oss.createAccount();
                     break;
                 default:
-                    System.out.println("Invalid input. Please enter a valid option.");
+                    System.out.println("Invalid input.");
                     break;
             }
-            System.out.println();
+            if(loginFlag) {
+                System.out.println();
+                System.out.println("======================================================");
+                System.out.println("Welcome to PolyShop, a friendly online shopping system");
+                System.out.println("======================================================");
+            }
+            while(loginFlag){
+                System.out.println("\nPlease choose from the following options:");
+                System.out.println("1. Display All Products");
+                System.out.println("2. Filter Products");
+                System.out.println("3. Search Products");
+                System.out.println("0. Log Out");
+                System.out.print(">> ");
+                input = scanner.nextLine();
+                if(input.equals("0")) {
+                    loginFlag = false;
+                }
+                switch (input) {
+                    case "0":
+                        System.out.println("Thank you for visiting. See you again.");
+                    case "1":
+                        oss.displayProduct();
+                        break;
+                    case "2":
+                        oss.filterProduct();
+                        break;
+                    case "3":
+                        oss.searchProduct();
+                        break;
+                }
+            }
         }
+
     }
 }
