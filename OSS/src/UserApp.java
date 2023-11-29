@@ -56,7 +56,10 @@ public class UserApp {
                     }
                 } while (!(input.equals("1") || input.equals("2") || input.equals("0")));
                 if (input.equals("2")) {
-                    oss.checkout();
+                    flag = oss.checkout();
+                    if(flag) {
+                        oss.bill();
+                    }
                 } else {
                     oss.productDetails();
                     do {

@@ -3,6 +3,8 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.*;
 import oracle.jdbc.driver.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class OSS {
     // Connection
@@ -256,17 +258,30 @@ public class OSS {
         return true;
     }
     public boolean filterProduct() throws SQLException {
-        result = new ArrayList<String>();
-        scanner = new Scanner(System.in);
         ResultSet rset;
-        System.out.println("Available Filter Options:");
-        System.out.println("1. By Category");
-        System.out.println("2. By Brand");
-        System.out.println("3. By Price Range");
-        System.out.println("0. Cancel");
-        System.out.print("Enter the filter options separated by commas (e.g., 1,2,3): ");
-        String input = scanner.nextLine();
-        String[] choices = input.split(",");
+        boolean isValidInput = false;
+        String input;
+        String[] choices;
+        do {
+            System.out.println("Available Filter Options:");
+            System.out.println("1. By Category");
+            System.out.println("2. By Brand");
+            System.out.println("3. By Price Range");
+            System.out.println("0. Cancel");
+            System.out.print("Enter the filter options separated by commas (e.g., 1,2,3): ");
+            input = scanner.nextLine();
+            choices = input.split(",");
+            isValidInput = true;
+            for (String choice : choices) {
+                if (!choice.matches("[0-3]")) {
+                    isValidInput = false;
+                    break;
+                }
+            }
+            if (!isValidInput) {
+                System.out.println("Invalid input. Please enter valid filter options.");
+            }
+        } while (!isValidInput || !input.equals("0"));
         boolean categoryFilter = false, brandFilter = false, priceRangeFilter = false;
         for (String choice : choices) {
             int option = Integer.parseInt(choice.trim());
@@ -448,10 +463,10 @@ public class OSS {
         return true;
     }
     static String orderID = "O001";
-    public void checkout() throws SQLException {
+    public boolean checkout() throws SQLException {
         if (!viewCart()) {
             System.out.println("Cannot checkout since cart is empty.");
-            return;
+            return false;
         }
         ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.name, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
         while(rset.next()) {
@@ -465,18 +480,40 @@ public class OSS {
             numericPart++;
             orderID = String.format("O%03d", numericPart);
         }
+        return true;
     }
     public void bill() throws SQLException {
         ResultSet rset = getStmt(conn).executeQuery("SELECT ORDERID, SUM(TOTALPRICE) AS FINALPRICE FROM orderdetails WHERE USERID = '" + userID + "' GROUP BY ORDERID");
         while (rset.next()) {
             String orderId = rset.getString("ORDERID");
             double finalPrice = rset.getDouble("FINALPRICE");
-            String billDate = getCurrentDate(); // Replace with your logic to get the current date
-            String paymentMethod = getPaymentMethod(); // Replace with your logic to get the payment method
-            String destination = getDestination(); // Replace with your logic to get the destination
-
-            String query = String.format("INSERT INTO bill (ORDERID, BILLDATE, PAYMENTMETHOD, FINALPRICE, DESTINATION) VALUES ('%s', '%s', '%s', %.2f, '%s')", orderId, billDate, paymentMethod, finalPrice, destination);
-            getStmt(conn).execute(query);
+            LocalDate currentDate = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String billDate = currentDate.format(formatter);
+            String input; String paymentMethod = "0";
+            do {
+                System.out.println("\nHow do you want to pay? ");
+                System.out.println("1. Credit Card");
+                System.out.println("2. Cash On Delivery");
+                System.out.println("0. Back");
+                System.out.print(">> ");
+                input = scanner.nextLine();
+                if (!(input.equals("1") || input.equals("2") || input.equals("0"))) {
+                    System.out.println("Invalid input. Please enter 1, 2, or 0.");
+                }
+            } while (!(input.equals("1") || input.equals("2") || input.equals("0")));
+            switch (input) {
+                case "0" -> {
+                    return;
+                }
+                case "1" -> paymentMethod = "1";
+                case "2" -> paymentMethod = "0";
+            }
+            rset = getStmt(conn).executeQuery("SELECT address FROM Users WHERE userId = '" + userID + "'");
+            if(rset.next()) {
+                String query = "INSERT INTO bill (ORDERID, BILLDATE, PAYMENTMETHOD, FINALPRICE, DESTINATION) VALUES ('" + orderId + "', '" + billDate + "', '" + paymentMethod + "', " + finalPrice + ", '" + rset.getString("address") + "')";
+                getStmt(conn).execute(query);
+            }
         }
     }
 }
