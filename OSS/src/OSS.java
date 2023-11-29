@@ -118,8 +118,9 @@ public class OSS {
         userID = enteredUserID;
         return true;
     }
-    List<String> productList = new ArrayList<>();
+    List<String> result;
     public boolean searchProduct() throws SQLException {
+        result = new ArrayList<String>();
         scanner = new Scanner(System.in);
         System.out.print("\nEnter the keyword to search: ");
         String keyword = scanner.next();
@@ -134,7 +135,7 @@ public class OSS {
             double price = rset.getDouble("price");
 
             String productId = rset.getString("productID");
-            productList.add(productId);
+            result.add(productId);
             System.out.println();
             System.out.println(++count + ". Product " + count);
             System.out.println("Product Name: " + productName);
@@ -143,6 +144,7 @@ public class OSS {
         return true;
     }
     public boolean filterProduct() throws SQLException {
+        result = new ArrayList<String>();
         scanner = new Scanner(System.in);
         ResultSet rset;
         System.out.println("Available Filter Options:");
@@ -209,7 +211,7 @@ public class OSS {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
             String productId = rset.getString("productID");
-            productList.add(productId);
+            result.add(productId);
             System.out.println();
             System.out.println(++count + ". Product " + count);
             System.out.println("Product Name: " + productName);
@@ -218,6 +220,7 @@ public class OSS {
         return true;
     }
     public boolean displayProduct() throws SQLException {
+        result = new ArrayList<String>();
         ResultSet rset = getStmt(conn).executeQuery("SELECT * FROM product");
         if (!rset.next()) {
             System.out.println("Product not found.");
@@ -228,7 +231,7 @@ public class OSS {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
             String productId = rset.getString("productID");
-            productList.add(productId);
+            result.add(productId);
             System.out.println();
             System.out.println(++count + ". Product " + count);
             System.out.println("Product Name: " + productName);
@@ -246,7 +249,7 @@ public class OSS {
             return;
         }
         int input = Integer.parseInt(inputStr);
-        productID = productList.get(input - 1);
+        productID = result.get(input - 1);
         ResultSet rset = getStmt(conn).executeQuery("SELECT * FROM product WHERE productID = '" + productID + "'");
         if (rset.next()) {
             String productName = rset.getString("name");
@@ -264,9 +267,7 @@ public class OSS {
             System.out.println("Category: " + category);
         }
     }
-
-    String cartID = "C001";
-    String orderID = "O001";
+    static String orderID = "O001";
     public void addToCart() throws SQLException {
         scanner = new Scanner(System.in);
         System.out.print("\nPlease input the amount:\n>> ");
@@ -276,13 +277,42 @@ public class OSS {
             inputStr = scanner.nextLine();
         }
         int input = Integer.parseInt(inputStr);
-        getStmt(conn).execute("INSERT INTO cart (cartID, userID, orderID, productID, quantity) VALUES ('" + cartID + "', '" + userID + "', '" + orderID + "', '" + productID + "', " + input + ")");
+        getStmt(conn).execute("INSERT INTO cart (userID, orderID, productID, quantity) VALUES ('" + userID + "', '" + orderID + "', '" + productID + "', " + input + ")");
         ResultSet rset = getStmt(conn).executeQuery("SELECT name FROM product WHERE productID = '" + productID + "'");
-        System.out.println("The product '" + rset.next() + "' has been successfully added to cart.");
-        // increment orderID
-        String numericPart = orderID.substring(1);
-        int number = Integer.parseInt(numericPart);
-        String incrementedNumericPart = String.format("%03d", ++number);
-        orderID = "O" + incrementedNumericPart;
+        System.out.println("The product '" + rset.getString("name") + "' has been successfully added to cart.");
+        int numericPart = Integer.parseInt(orderID.substring(1));
+        numericPart++;
+        orderID = String.format("O%03d", numericPart);
+    }
+    public void removeFromCart() throws SQLException {
+        ResultSet rset = getStmt(conn).executeQuery("SELECT name FROM product WHERE productID = '" + productID + "'");
+        getStmt(conn).execute("DELETE FROM cart WHERE productID = '" + productID + "' AND userID = '" + userID + "'");
+        System.out.println("The product '" + rset.getString("name") + "' has been successfully deleted from cart.");
+    }
+    public boolean viewCart() throws SQLException {
+        result = new ArrayList<String>();
+        String query = "SELECT p.productID, p.name, c.quantity " +
+                "FROM cart c " +
+                "JOIN product p ON c.productID = p.productID " +
+                "WHERE c.userID = " + userID;
+        ResultSet rset = getStmt(conn).executeQuery(query);
+        if(!rset.next()) {
+            System.out.println("Cart is currently empty.");
+            return false;
+        }
+        System.out.println("\nProducts in Cart:");
+        while (rset.next()) {
+            result = new ArrayList<String>();
+            String productID = rset.getString("productID");
+            result.add(productID);
+            String productName = rset.getString("name");
+            int quantity = rset.getInt("quantity");
+            System.out.println("Order ID: " + orderID);
+            System.out.println("Product ID: " + productID);
+            System.out.println("Product Name: " + productName);
+            System.out.println("Quantity: " + quantity);
+            System.out.println("--------------------");
+        }
+        return true;
     }
 }
