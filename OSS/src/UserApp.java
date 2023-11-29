@@ -46,40 +46,42 @@ public class UserApp {
                 do {
                     System.out.println("\nPlease choose from the following options:");
                     System.out.println("1. Product Details");
+                    System.out.println("2. Checkout Cart");
                     System.out.println("0. Back");
                     System.out.print(">> ");
                     input = scanner.nextLine();
 
-                    if (!(input.equals("1") || input.equals("0"))) {
+                    if (!(input.equals("1") || input.equals("2") || input.equals("0"))) {
                         System.out.println("Invalid input. Please enter 1 or 0.");
                     }
-                } while (!(input.equals("1") || input.equals("0")));
-                if(input.equals("0")) {
-                    continue;
-                }
-                oss.productDetails();
-                do {
-                    System.out.println("\nPlease choose from the following options:");
-                    if(key.equals("4")) {
-                        System.out.println("1. Remove From Cart");
-                    } else {
-                        System.out.println("1. Add To Cart");
-                    }
-                    System.out.println("0. Back");
-                    System.out.print(">> ");
-                    input = scanner.nextLine();
-
-                    if (!(input.equals("1") || input.equals("0"))) {
-                        System.out.println("Invalid input. Please enter 1 or 0.");
-                    }
-                } while (!(input.equals("1") || input.equals("0")));
-                if(input.equals("0")) {
-                    continue;
-                }
-                if(key.equals("4")) {
-                    oss.removeFromCart();
+                } while (!(input.equals("1") || input.equals("2") || input.equals("0")));
+                if (input.equals("2")) {
+                    oss.checkout();
                 } else {
-                    oss.addToCart();
+                    oss.productDetails();
+                    do {
+                        System.out.println("\nPlease choose from the following options:");
+                        if(key.equals("4")) {
+                            System.out.println("1. Remove From Cart");
+                        } else {
+                            System.out.println("1. Add To Cart");
+                        }
+                        System.out.println("0. Back");
+                        System.out.print(">> ");
+                        input = scanner.nextLine();
+
+                        if (!(input.equals("1") || input.equals("0"))) {
+                            System.out.println("Invalid input. Please enter 1 or 0.");
+                        }
+                    } while (!(input.equals("1") || input.equals("0")));
+                    if(input.equals("0")) {
+                        continue;
+                    }
+                    if(key.equals("4")) {
+                        oss.removeFromCart();
+                    } else {
+                        oss.addToCart();
+                    }
                 }
             }
         }

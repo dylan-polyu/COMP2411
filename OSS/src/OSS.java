@@ -354,16 +354,22 @@ public class OSS {
     String productID = "";
     public void productDetails() throws SQLException {
         scanner = new Scanner(System.in);
-        System.out.print("\nPlease input the product number:\n>> ");
-        String inputStr = scanner.nextLine();
-        if (inputStr.isEmpty() || !inputStr.matches("\\d+")) {
-            System.out.println("Invalid input. Please enter a valid product number.");
-            return;
-        }
-        int input = Integer.parseInt(inputStr);
-        if(input < 1 || input > result.size()) {
-            System.out.println("Invalid input. Please enter a valid product number.");
-            return;
+        String inputStr; int input;
+        while (true) {
+            System.out.print("\nPlease input the product number (or 0 to cancel):\n>> ");
+            inputStr = scanner.nextLine();
+            if (inputStr.isEmpty() || !inputStr.matches("\\d+")) {
+                System.out.println("Invalid input. Please enter a valid product number.");
+                continue;
+            }
+            input = Integer.parseInt(inputStr);
+            if (input == 0) {
+                return;
+            } else if (input < 1 || input > result.size()) {
+                System.out.println("Invalid input. Please enter a valid product number.");
+            } else {
+                break;
+            }
         }
         productID = result.get(input - 1);
         ResultSet rset = getStmt(conn).executeQuery("SELECT * FROM product WHERE productID = '" + productID + "'");
@@ -383,7 +389,6 @@ public class OSS {
             System.out.println("Category: " + category);
         }
     }
-    static String orderID = "O001";
     public void addToCart() throws SQLException {
         scanner = new Scanner(System.in);
         System.out.print("\nPlease input the amount:\n>> ");
@@ -395,21 +400,17 @@ public class OSS {
         int input = Integer.parseInt(inputStr);
         ResultSet rset = getStmt(conn).executeQuery("SELECT productID, quantity FROM cart WHERE userID = '" + userID + "' AND productID = '" + productID + "'");
         if (rset.next()) {
-            int existingQuantity = rset.getInt("quantity");
-            int newQuantity = existingQuantity + input;
             getStmt(conn).execute("UPDATE cart SET quantity = " + (input + rset.getInt("quantity")) + " WHERE userID = '" + userID + "' AND productID = '" + productID + "'");
             System.out.println("The quantity of the product with ID " + productID + " has been updated in the cart.");
         } else {
-            getStmt(conn).execute("INSERT INTO cart (userID, orderID, productID, quantity) VALUES ('" + userID + "', '" + orderID + "', '" + productID + "', " + input + ")");
+            getStmt(conn).execute("INSERT INTO cart (userID, productID, quantity) VALUES ('" + userID + "', '" + productID + "', " + input + ")");
 
             rset = getStmt(conn).executeQuery("SELECT name FROM product WHERE productID = '" + productID + "'");
             if(rset.next()) {
                 System.out.println("The product '" + rset.getString("name") + "' has been successfully added to cart.");
             }
 
-            int numericPart = Integer.parseInt(orderID.substring(1));
-            numericPart++;
-            orderID = String.format("O%03d", numericPart);
+
         }
     }
     public void removeFromCart() throws SQLException {
@@ -445,5 +446,37 @@ public class OSS {
             System.out.println("--------------------");
         } while (rset.next());
         return true;
+    }
+    static String orderID = "O001";
+    public void checkout() throws SQLException {
+        if (!viewCart()) {
+            System.out.println("Cannot checkout since cart is empty.");
+            return;
+        }
+        ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.name, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
+        while(rset.next()) {
+            String productID = rset.getString("productID");
+            int quantity = rset.getInt("quantity");
+            double price = rset.getDouble("price");
+            double totalPrice = price * quantity;
+            String query = String.format("INSERT INTO orderdetails (ORDERID, TOTALPRICE, PRODUCTID, USERID) VALUES ('%s', %.2f, '%s', '%s')", orderID, totalPrice, productID, userID);
+            getStmt(conn).execute(query);
+            int numericPart = Integer.parseInt(orderID.substring(1));
+            numericPart++;
+            orderID = String.format("O%03d", numericPart);
+        }
+    }
+    public void bill() throws SQLException {
+        ResultSet rset = getStmt(conn).executeQuery("SELECT ORDERID, SUM(TOTALPRICE) AS FINALPRICE FROM orderdetails WHERE USERID = '" + userID + "' GROUP BY ORDERID");
+        while (rset.next()) {
+            String orderId = rset.getString("ORDERID");
+            double finalPrice = rset.getDouble("FINALPRICE");
+            String billDate = getCurrentDate(); // Replace with your logic to get the current date
+            String paymentMethod = getPaymentMethod(); // Replace with your logic to get the payment method
+            String destination = getDestination(); // Replace with your logic to get the destination
+
+            String query = String.format("INSERT INTO bill (ORDERID, BILLDATE, PAYMENTMETHOD, FINALPRICE, DESTINATION) VALUES ('%s', '%s', '%s', %.2f, '%s')", orderId, billDate, paymentMethod, finalPrice, destination);
+            getStmt(conn).execute(query);
+        }
     }
 }

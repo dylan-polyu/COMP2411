@@ -76,8 +76,6 @@ public class Application {
                 break;
             }
         }
-
-
         if(userType.equals("a")){
             AdministratorApp adminapp = new AdministratorApp(oss);
             adminapp.run();
