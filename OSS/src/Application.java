@@ -14,11 +14,12 @@ public class Application {
             System.out.println("0. Close App");
             System.out.print(">> ");
             String input = scanner.nextLine();
-            if (input.equals("0")) {
+            if(input.equals("0")) {
                 oss.closeApp();
                 break;
             }
             switch (input) {
+                case "0":
                 case "1":
                     loginFlag = oss.loginAccount();
                     break;
@@ -44,20 +45,50 @@ public class Application {
                 System.out.print(">> ");
                 input = scanner.nextLine();
                 if(input.equals("0")) {
+                    System.out.println("Thank you for visiting. See you again.");
                     loginFlag = false;
+                    break;
                 }
                 switch (input) {
-                    case "0":
-                        System.out.println("Thank you for visiting. See you again.");
                     case "1":
-                        oss.displayProduct();
+                        loginFlag = oss.displayProduct();
                         break;
                     case "2":
-                        oss.filterProduct();
+                        loginFlag = oss.filterProduct();
                         break;
                     case "3":
-                        oss.searchProduct();
+                        loginFlag = oss.searchProduct();
                         break;
+                }
+                while (loginFlag) {
+                    System.out.println("\nPlease choose from the following options:");
+                    System.out.println("1. Product Details");
+                    System.out.println("0. Back");
+                    System.out.print(">> ");
+                    input = scanner.nextLine();
+                    if(input.equals("0")) {
+                        break;
+                    }
+                    switch (input) {
+                        case "1":
+                            oss.productDetails();
+                            break;
+                    }
+                    while (loginFlag) {
+                        System.out.println("\nPlease choose from the following options:");
+                        System.out.println("1. Add To Cart");
+                        System.out.println("0. Back");
+                        System.out.print(">> ");
+                        input = scanner.nextLine();
+                        if(input.equals("0")) {
+                            break;
+                        }
+                        switch (input) {
+                            case "1":
+                                oss.addToCart();
+                                break;
+                        }
+                    }
                 }
             }
         }
