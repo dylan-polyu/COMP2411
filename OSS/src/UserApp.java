@@ -60,6 +60,8 @@ public class UserApp {
                     if(flag) {
                         oss.bill();
                     }
+                } else if(input.equals("0")) {
+                    continue;
                 } else {
                     oss.productDetails();
                     do {

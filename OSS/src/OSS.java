@@ -238,23 +238,27 @@ public class OSS {
         scanner = new Scanner(System.in);
         System.out.print("\nEnter the keyword to search: ");
         String keyword = scanner.next();
-        String query = String.format("SELECT * FROM product WHERE name LIKE '%%%s%%' OR description LIKE '%%%s%%'", keyword, keyword);        ResultSet rset = getStmt(conn).executeQuery(query);
+        String query = String.format("SELECT * FROM product WHERE name LIKE '%%%s%%' OR description LIKE '%%%s%%'", keyword, keyword);
+        ResultSet rset = getStmt(conn).executeQuery(query);
         if (!rset.next()) {
             System.out.println("Product not found.");
             return false;
         }
         int count = 0;
-        do {
+        System.out.println("Here is the list of product(s):");
+        while (rset.next()) {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
-
             String productId = rset.getString("productID");
             result.add(productId);
             System.out.println();
-            System.out.println(++count + ". Product " + count);
-            System.out.println("Product Name: " + productName);
-            System.out.println("Price: $" + price);
-        } while (rset.next());
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            System.out.println("#" + ++count);
+            System.out.printf("Product ID    : %s%n", productId);
+            System.out.printf("Product Name  : %s%n", productName);
+            System.out.printf("Price         : $%.2f%n", price);
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        }
         return true;
     }
     public boolean filterProduct() throws SQLException {
@@ -334,15 +338,19 @@ public class OSS {
             return false;
         }
         int count = 0;
+        System.out.println("Here is the list of product(s):");
         do {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
             String productId = rset.getString("productID");
             result.add(productId);
             System.out.println();
-            System.out.println(++count + ". Product " + count);
-            System.out.println("Product Name: " + productName);
-            System.out.println("Price: $" + price);
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            System.out.println("#" + ++count);
+            System.out.printf("Product ID    : %s%n", productId);
+            System.out.printf("Product Name  : %s%n", productName);
+            System.out.printf("Price         : $%.2f%n", price);
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         } while (rset.next());
         return true;
     }
@@ -354,16 +362,22 @@ public class OSS {
             return false;
         }
         int count = 0;
-        do {
+        System.out.println("Here is the list of product(s):");
+        while (!rset.next()) {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
             String productId = rset.getString("productID");
             result.add(productId);
+
             System.out.println();
-            System.out.println(++count + ". Product " + count);
-            System.out.println("Product Name: " + productName);
-            System.out.println("Price: $" + price);
-        } while (rset.next());
+            System.out.println("Product Details:");
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            System.out.println("#" + ++count);
+            System.out.printf("Product ID    : %s%n", productId);
+            System.out.printf("Product Name  : %s%n", productName);
+            System.out.printf("Price         : $%.2f%n", price);
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        }
         return true;
     }
     String productID = "";
@@ -396,12 +410,15 @@ public class OSS {
             String brand = rset.getString("brand");
             String category = rset.getString("category");
             System.out.println();
-            System.out.println("Product Name: " + productName);
-            System.out.println("Price: $" + price);
-            System.out.println("Description: " + description);
-            System.out.println("Dimensions: " + dimensions);
-            System.out.println("Brand: " + brand);
-            System.out.println("Category: " + category);
+            System.out.println("Product Details:");
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            System.out.printf("%-15s: %s%n", "Product Name", productName);
+            System.out.printf("%-15s: $%.2f%n", "Price", price);
+            System.out.printf("%-15s: %s%n", "Description", description);
+            System.out.printf("%-15s: %s%n", "Dimensions", dimensions);
+            System.out.printf("%-15s: %s%n", "Brand", brand);
+            System.out.printf("%-15s: %s%n", "Category", category);
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         }
     }
     public void addToCart() throws SQLException {
@@ -431,8 +448,14 @@ public class OSS {
     public void removeFromCart() throws SQLException {
         ResultSet rset = getStmt(conn).executeQuery("SELECT name FROM product WHERE productID = '" + productID + "'");
         getStmt(conn).execute("DELETE FROM cart WHERE productID = '" + productID + "' AND userID = '" + userID + "'");
-        if(rset.next()) {
-            System.out.println("The product '" + rset.getString("name") + "' has been successfully deleted from cart.");
+        String checkQuery = "SELECT PRODUCTID FROM orderdetails WHERE PRODUCTID = '" + productID + "'";
+        ResultSet checkResult = getStmt(conn).executeQuery(checkQuery);
+        if (rset.next()) {
+            String productName = rset.getString("name");
+            if (checkResult.next()) {
+                getStmt(conn).execute("DELETE FROM orderdetails WHERE PRODUCTID = '" + productID + "' AND USERID = '" + userID + "'");
+            }
+            System.out.println("The product '" + productName + "' has been successfully removed from cart.");
         }
     }
     public boolean viewCart() throws SQLException {
@@ -468,17 +491,22 @@ public class OSS {
             System.out.println("Cannot checkout since cart is empty.");
             return false;
         }
-        ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.name, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
+        ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.name, p.price, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
         while(rset.next()) {
             String productID = rset.getString("productID");
             int quantity = rset.getInt("quantity");
             double price = rset.getDouble("price");
             double totalPrice = price * quantity;
-            String query = String.format("INSERT INTO orderdetails (ORDERID, TOTALPRICE, PRODUCTID, USERID) VALUES ('%s', %.2f, '%s', '%s')", orderID, totalPrice, productID, userID);
-            getStmt(conn).execute(query);
-            int numericPart = Integer.parseInt(orderID.substring(1));
-            numericPart++;
-            orderID = String.format("O%03d", numericPart);
+            ResultSet checkResult = getStmt(conn).executeQuery("SELECT PRODUCTID FROM orderdetails WHERE PRODUCTID = '" + productID + "'");
+            if (!checkResult.next()) {
+                ResultSet checkOrderResult = getStmt(conn).executeQuery("SELECT ORDERID FROM orderdetails WHERE ORDERID = '" + orderID + "'");
+                if(checkOrderResult.next()) {
+                    int numericPart = Integer.parseInt(orderID.substring(1));
+                    numericPart++;
+                    orderID = String.format("O%03d", numericPart);
+                }
+                getStmt(conn).execute("INSERT INTO orderdetails (ORDERID, TOTALPRICE, PRODUCTID, USERID) VALUES ('" + orderID + "', " + totalPrice + ", '" + productID + "', '" + userID + "')");
+            }
         }
         return true;
     }
@@ -497,6 +525,7 @@ public class OSS {
                 System.out.println("2. Cash On Delivery");
                 System.out.println("0. Back");
                 System.out.print(">> ");
+                scanner = new Scanner(System.in);
                 input = scanner.nextLine();
                 if (!(input.equals("1") || input.equals("2") || input.equals("0"))) {
                     System.out.println("Invalid input. Please enter 1, 2, or 0.");
@@ -509,11 +538,43 @@ public class OSS {
                 case "1" -> paymentMethod = "1";
                 case "2" -> paymentMethod = "0";
             }
-            rset = getStmt(conn).executeQuery("SELECT address FROM Users WHERE userId = '" + userID + "'");
-            if(rset.next()) {
-                String query = "INSERT INTO bill (ORDERID, BILLDATE, PAYMENTMETHOD, FINALPRICE, DESTINATION) VALUES ('" + orderId + "', '" + billDate + "', '" + paymentMethod + "', " + finalPrice + ", '" + rset.getString("address") + "')";
-                getStmt(conn).execute(query);
+            rset = getStmt(conn).executeQuery("SELECT address FROM useraddresses WHERE userId = '" + userID + "'");
+            List<String> addresses = new ArrayList<>();
+            while(rset.next()) {
+                addresses.add(rset.getString("address"));
             }
+            if (!addresses.isEmpty()) {
+                String inputStr; int inputInt;
+                for (int i = 0; i < addresses.size(); i++) {
+                    System.out.println((i + 1) + ". " + addresses.get(i));
+                }
+                while (true) {
+                    System.out.print("\nPlease input the address (or 0 to cancel):\n>> ");
+                    inputStr = scanner.nextLine();
+                    if (inputStr.isEmpty() || !inputStr.matches("\\d+")) {
+                        System.out.println("Invalid input. Please enter a valid address number.");
+                        continue;
+                    }
+                    inputInt = Integer.parseInt(inputStr);
+                    if (inputInt == 0) {
+                        return;
+                    } else if (inputInt < 1 || inputInt > result.size()) {
+                        System.out.println("Invalid input. Please enter a valid address number.");
+                    } else {
+                        break;
+                    }
+                }
+                String selectedAddress = addresses.get(inputInt - 1);
+                getStmt(conn).execute("INSERT INTO bill (ORDERID, BILLDATE, PAYMENTMETHOD, FINALPRICE, DESTINATION) VALUES ('" + orderId + "', '" + billDate + "', '" + paymentMethod + "', " + finalPrice + ", '" + selectedAddress + "')");
+                ResultSet rsetTemp = getStmt(conn).executeQuery("SELECT PRODUCTID FROM orderdetails WHERE ORDERID = '" + orderId + "'");
+                if (rsetTemp.next()) {
+                    String productIDTemp = rsetTemp.getString("PRODUCTID");
+                    getStmt(conn).execute("DELETE FROM cart WHERE PRODUCTID = '" + productIDTemp + "'");
+                }
+            } else {
+                System.out.println("No addresses found for the user.");
+            }
+
         }
     }
 }
