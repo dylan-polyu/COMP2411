@@ -23,13 +23,14 @@ public class UserApp {
                 System.out.println("2. Filter Products");
                 System.out.println("3. Search Products");
                 System.out.println("4. View Cart");
+                System.out.println("5. Edit Profile");
                 System.out.println("0. Log Out");
                 System.out.print(">> ");
-                input = scanner.nextLine();
-                if (!(input.equals("1") || input.equals("2") || input.equals("3") || input.equals("4") || input.equals("0"))) {
+                input = scanner.next();
+                if (!(input.equals("1") || input.equals("2") || input.equals("3") || input.equals("4") || input.equals("5")|| input.equals("0"))) {
                     System.out.println("Invalid input. Please enter 1, 2, 3, 4, or 0.");
                 }
-            } while (!(input.equals("1") || input.equals("2") || input.equals("3") || input.equals("4") || input.equals("0")));
+            } while (!(input.equals("1") || input.equals("2") || input.equals("3") || input.equals("4") || input.equals("5")|| input.equals("0")));
             if(input.equals("0")) {
                 System.out.println("Thank you for visiting. See you again.");
                 break;
@@ -39,6 +40,7 @@ public class UserApp {
                 case "2" -> oss.filterProduct();
                 case "3" -> oss.searchProduct();
                 case "4" -> oss.viewCart();
+//                case "5" -> oss.editProfile();
                 default -> flag;
             };
             String key = input;
@@ -49,10 +51,9 @@ public class UserApp {
                     System.out.println("2. Checkout Cart");
                     System.out.println("0. Back");
                     System.out.print(">> ");
-                    input = scanner.nextLine();
-
+                    input = scanner.next();
                     if (!(input.equals("1") || input.equals("2") || input.equals("0"))) {
-                        System.out.println("Invalid input. Please enter 1 or 0.");
+                        System.out.println("Invalid input. Please enter 1, 2, or 0.");
                     }
                 } while (!(input.equals("1") || input.equals("2") || input.equals("0")));
                 if (input.equals("2")) {
@@ -60,9 +61,7 @@ public class UserApp {
                     if(flag) {
                         oss.bill();
                     }
-                } else if(input.equals("0")) {
-                    continue;
-                } else {
+                } else if(input.equals("1")) {
                     oss.productDetails();
                     do {
                         System.out.println("\nPlease choose from the following options:");
@@ -71,20 +70,36 @@ public class UserApp {
                         } else {
                             System.out.println("1. Add To Cart");
                         }
+                        System.out.println("2. Check Review");
+                        System.out.println ("3. Add a Review");
                         System.out.println("0. Back");
                         System.out.print(">> ");
-                        input = scanner.nextLine();
+                        input = scanner.next();
 
-                        if (!(input.equals("1") || input.equals("0"))) {
-                            System.out.println("Invalid input. Please enter 1 or 0.");
+                        if (!input.equals("1") && !input.equals("2") && !input.equals("3") && !input.equals("0")) {
+                            System.out.println("Invalid input. Please enter 1, 2, 3, or 0.");
                         }
-                    } while (!(input.equals("1") || input.equals("0")));
+                    } while (!input.equals("1")&& !input.equals("2") && !input.equals("3") && !input.equals("0"));
                     if(input.equals("0")) {
                         continue;
                     }
                     if(key.equals("4")) {
                         oss.removeFromCart();
-                    } else {
+                    }
+                    else if(input.equals("2")){
+                        if(oss.printreview()){
+                        }
+                        else{
+                            System.out.println("No reviews available.");
+                        }
+                    }
+                    else if (input.equals ("3")){
+                        // here add review function
+                        if (!oss.addReview()){
+                            System.out.println ("Cancelled.");
+                        }
+                    }
+                    else {
                         oss.addToCart();
                     }
                 }

@@ -15,57 +15,55 @@ public class Application {
             System.out.println("2. Create Account");
             System.out.println("0. Close App");
             System.out.print(">> ");
-            String input = scanner.nextLine();
-
+            String input = scanner.next();
             if(input.equals("0")) {
                 oss.closeApp();
                 break;
             }
             switch (input) {
                 case "0":
-                    oss.closeApp();
+                    loginFlag = true;
                     break;
                 case "1":
                     String loginType;
                     do{
-                        System.out.println("Are you a user or admin? (u for user / a for admin) >> ");
+                        System.out.println("\nAre you a user or admin?");
+                        System.out.print("'u' - user account | 'a' - admin account\n>> ");
                         loginType = scanner.next();
                         if(loginType.equals("u") || loginType.equals("a")){
                             break;
                         }
                         else{
-                            System.out.println("Incorrect input. Please try again. >> ");
+                            System.out.print("Incorrect input. Please try again.\n");
                         }
                     } while(true);
                     if(loginType.equals("a")){
                         loginFlag = oss.loginAdminAccount();
-                        if(loginFlag) {
-                            userType = "a";
-                        }
+                        if(loginFlag)userType = "a";
                     }
                     else{
                         loginFlag = oss.loginUserAccount();
                         if(loginFlag) userType = "u";
                     }
                     break;
-
                 case "2":
                     String createType;
                     do{
-                        System.out.println("Create user or admin account? (u for user/ a for admin) >> ");
+                        System.out.println("\nCreate user or admin account?");
+                        System.out.println("\n'u' - user account | 'a' - admin account\n>> ");
                         createType = scanner.next();
                         if(createType.equals("u") || createType.equals("a")){
                             break;
                         }
                         else{
-                            System.out.println("Incorrect input. Please try again. >> ");
+                            System.out.println("\nIncorrect input. Please try again.\n>> ");
                         }
                     } while(true);
                     if(createType.equals("a")){
-                        loginFlag = oss.createAdminAccount();
+                        oss.createAdminAccount();
                     }
                     else{
-                        loginFlag = oss.createUserAccount();
+                        oss.createUserAccount();
                     }
                     break;
                 default:

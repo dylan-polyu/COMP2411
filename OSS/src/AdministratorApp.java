@@ -1,3 +1,5 @@
+import com.sun.net.httpserver.Authenticator;
+
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -8,21 +10,71 @@ public class AdministratorApp {
         scanner = new Scanner(System.in);
         this.oss = oss;
     }
-    public void productManagement(){
+
+    private void promotionManagement() throws SQLException{
+        while(true){
+            System.out.println("\nPlease choose from the following options:");
+            System.out.println("1. Add a promotion");
+            System.out.println("2. Remove a promotion");
+            System.out.println("3. Edit a promotion");
+            System.out.println("4. Search a promotion");
+            System.out.println("0. Back");
+            System.out.print(">> ");
+            String input = scanner.next();
+            switch(input){
+                case "1":
+                    oss.addPromotion();
+                    break;
+                case "2":
+                    oss.removePromotion();
+                    break;
+                case "3":
+                    oss.editPromotion();
+                    break;
+                case "4":
+                    oss.getPromotion();
+                    break;
+                case "0":
+                    return;
+            }
+        }
+    }
+    private void productManagement() throws SQLException {
         while(true){
             System.out.println("\nPlease choose from the following options:");
             System.out.println("1. Add a product");
             System.out.println("2. Remove a product");
             System.out.println("3. Edit a product");
+            System.out.println("0. Return");
+            System.out.print(">> ");
             String input = scanner.next();
             switch(input){
                 case "1":
-
+                    if(oss.addProduct()){
+                        System.out.println("Successfully added new product");
+                    }
+                    else{
+                        System.out.println("Failed to add product");
+                    }
                     break;
                 case "2":
+                    if(oss.removeProduct()){
+                        System.out.println("Successfully removed product");
+                    }
+                    else{
+                        System.out.println("Failed to remove product");
+                    }
                     break;
                 case "3":
+                    if(oss.editProduct()){
+                        System.out.println("Successfully edited product");
+                    }
+                    else{
+                        System.out.println("Failed to edit product");
+                    }
                     break;
+                case "0":
+                    return;
             }
         }
     }
@@ -35,8 +87,8 @@ public class AdministratorApp {
         while (running) {
             System.out.println("\nPlease choose from the following options:");
             System.out.println("1. Product management");
-            System.out.println("2. Inventory management");
-            System.out.println("3. Report management");
+            System.out.println("2. Report management");
+            System.out.println("3. Promotion management");
             System.out.println("4. Display All Products");
             System.out.println("5. Filter Products");
             System.out.println("6. Search Products");
@@ -45,25 +97,27 @@ public class AdministratorApp {
             String input = scanner.nextLine();
             if (input.equals("0")) {
                 System.out.println("Thank you for visiting. See you again.");
-                running = false;
+//                running = false;
                 break;
             }
             switch (input) {
                 case "1":
+                    productManagement();
                     break;
-//                    running =
                 case "2":
+                    oss.generateReport();
                     break;
                 case "3":
+                    promotionManagement();
                     break;
                 case "4":
-                    running = oss.displayProduct();
+                    oss.displayProduct();
                     break;
                 case "5":
-                    running = oss.filterProduct();
+                    oss.filterProduct();
                     break;
                 case "6":
-                    running = oss.searchProduct();
+                    oss.searchProduct();
                     break;
             }
         }
