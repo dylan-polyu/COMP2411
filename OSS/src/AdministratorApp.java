@@ -45,32 +45,32 @@ public class AdministratorApp {
             System.out.println("1. Add a product");
             System.out.println("2. Remove a product");
             System.out.println("3. Edit a product");
-            System.out.println("0. Return");
+            System.out.println("0. Back");
             System.out.print(">> ");
             String input = scanner.next();
             switch(input){
                 case "1":
                     if(oss.addProduct()){
-                        System.out.println("Successfully added new product");
+                        System.out.println("\nSuccessfully added new product");
                     }
                     else{
-                        System.out.println("Failed to add product");
+                        System.out.println("\nFailed to add product");
                     }
                     break;
                 case "2":
                     if(oss.removeProduct()){
-                        System.out.println("Successfully removed product");
+                        System.out.println("\nSuccessfully removed product");
                     }
                     else{
-                        System.out.println("Failed to remove product");
+                        System.out.println("\nFailed to remove product");
                     }
                     break;
                 case "3":
                     if(oss.editProduct()){
-                        System.out.println("Successfully edited product");
+                        System.out.println("\nSuccessfully edited product");
                     }
                     else{
-                        System.out.println("Failed to edit product");
+                        System.out.println("\nFailed to edit product");
                     }
                     break;
                 case "0":

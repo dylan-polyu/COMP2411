@@ -3,7 +3,7 @@ import java.sql.*;
 import java.util.Scanner;
 
 public class Application {
-    public static void main(String[] args) throws SQLException, IOException {
+    public static void main(String[] args) throws SQLException {
         Scanner scanner = new Scanner(System.in);
         OSS oss = new OSS();
         boolean loginFlag = false;
