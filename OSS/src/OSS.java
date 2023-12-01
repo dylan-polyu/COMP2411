@@ -932,7 +932,9 @@ public class OSS {
         }
 
         System.out.println("Enter description >> ");
-        description =  scanner.next();
+
+        scanner.nextLine();
+        description =  scanner.nextLine();
         if(description.equals("-1")){
             return false;
         }
@@ -1437,7 +1439,7 @@ public class OSS {
                 return false;
             } else {
                 ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT password FROM userdata WHERE USERID ='%s'", userID));
-                System.out.println("\nSeurity Instructions - Please enter your current password");
+                System.out.println("\nSecurity Instructions - Please enter your current password");
                 System.out.print(">> ");
                 chc = scanner.next();
                 int attempt = 5;
