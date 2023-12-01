@@ -70,19 +70,15 @@ public class Application {
                     System.out.println("Invalid input.");
                     break;
             }
-            if(loginFlag){
-                break;
+            if(userType.equals("a")){
+                AdministratorApp adminapp = new AdministratorApp(oss);
+                adminapp.run();
+            }
+            else if(userType.equals("u")){
+                UserApp userapp = new UserApp(oss);
+                userapp.run();
             }
         }
-        if(userType.equals("a")){
-            AdministratorApp adminapp = new AdministratorApp(oss);
-            adminapp.run();
-        }
-        else if(userType.equals("u")){
-            UserApp userapp = new UserApp(oss);
-            userapp.run();
-        }
-        oss.closeApp();
 
     }
 }

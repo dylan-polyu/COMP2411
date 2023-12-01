@@ -257,22 +257,57 @@ public class OSS {
         userID = enteredUserID;
         return true;
     }
-
     public void generateReport() throws SQLException{
         System.out.println("\nReport Management System - Select a report type");
-        System.out.println("1. Selling report");
+        System.out.println("1. Sales report");
         System.out.println("2. Promotion report");
         System.out.println("0. Cancel");
         System.out.print(">> ");
         String input = scanner.next();
         switch(input) {
-            case "1" -> {
-                System.out.print("\nHere is the selling report based on the purchase history");
-                System.out.println("======================================================");
-                result = new ArrayList<String>();
-                ResultSet rset = getStmt(conn).executeQuery("SELECT * FROM PRODUCT");
-                getStmt(conn).execute("COMMIT");
-
+            case "1" -> { // selling report
+                System.out.println("Please select your preferred order:");
+                System.out.println("1. Descending order by views time");
+                System.out.println("2. Ascending order by views time");
+                System.out.println("3. Descending order by Sales volume");
+                System.out.println("4. Ascending order by Sales volume");
+                int optionChosen = scanner.nextInt();
+                ResultSet rset = null;
+                switch (optionChosen) {
+                    case 1 ->{
+                        System.out.print("\nHere is the sales report based on the purchase history (Descending order by views time)");
+                        System.out.println("\n---------------------------------------------------------------------------");
+                        result = new ArrayList<String>();
+                        rset = getStmt(conn).executeQuery("SELECT * FROM PRODUCT ORDER BY VIEWS DESC");
+                        getStmt(conn).execute("COMMIT");
+                    }
+                    case 2 -> {
+                        System.out.print("\nHere is the sales report based on the purchase history (Ascending order by views time)");
+                        System.out.println("\n---------------------------------------------------------------------------");
+                        result = new ArrayList<String>();
+                        rset = getStmt(conn).executeQuery("SELECT * FROM PRODUCT ORDER BY VIEWS ASC");
+                        getStmt(conn).execute("COMMIT");
+                    }
+                    case 3 ->{
+                        System.out.print("\nHere is the sales report based on the purchase history (Descending order by Sales volume)");
+                        System.out.println("\n---------------------------------------------------------------------------");
+                        result = new ArrayList<String>();
+                        rset = getStmt(conn).executeQuery("SELECT * FROM PRODUCT ORDER BY UNITS_SOLD DESC");
+                        getStmt(conn).execute("COMMIT");
+                    }
+                    case 4 ->{
+                        System.out.print("\nHere is the sales report based on the purchase history (Ascending order by Sales volume)");
+                        System.out.println("\n---------------------------------------------------------------------------");
+                        result = new ArrayList<String>();
+                        rset = getStmt(conn).executeQuery("SELECT * FROM PRODUCT ORDER BY UNITS_SOLD ASC");
+                        getStmt(conn).execute("COMMIT");
+                    }
+                    default -> {
+                        System.out.println("Wrong option, please choose again.");
+                        generateReport();
+                    }
+                }
+                assert rset != null;
                 if (!rset.next()) {
                     System.out.println("no data founded");
                     return;
@@ -282,13 +317,17 @@ public class OSS {
                     String productName = rset.getString("name");
                     int stockQty = rset.getInt("STOCK_QTY");
                     int unitsSold = rset.getInt("UNITS_SOLD");
+                    int price = rset.getInt("PRICE");
+                    int view = rset.getInt("VIEWS");
                     String productId = rset.getString("productID");
                     result.add(productId);
                     System.out.println();
-                    System.out.println(++count + ". Product " + count);
+                    System.out.println(++count + ". Product " +productName);
                     System.out.println("Product Name: " + productName);
                     System.out.println("Current stock: " + stockQty);
-                    System.out.println("Quantity sold: " + unitsSold);
+                    System.out.println("Sales volume: " + unitsSold);
+                    System.out.println("Sales: " + price*unitsSold);
+                    System.out.println("Views: " + view);
                 } while (rset.next());
             }
             case "2" -> {
@@ -347,13 +386,20 @@ public class OSS {
         do {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
+            double discPrice = rset.getDouble("discountprice");
             String productId = rset.getString("productID");
             result.add(productId);
             System.out.println("Product #" + ++count);
+            if(discPrice != 0) {
+                System.out.println("This product has a discount!");
+            }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             System.out.printf("Product ID    : %s%n", productId);
             System.out.printf("Product Name  : %s%n", productName);
             System.out.printf("Price         : $%.2f%n", price);
+            if(discPrice != 0) {
+                System.out.printf("Discounted    : $%.2f%n", discPrice);
+            }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         } while(rset.next());
         return true;
@@ -362,39 +408,37 @@ public class OSS {
         ResultSet rset;
         boolean categoryFilter = false, brandFilter = false, priceRangeFilter = false;
         String input = "";
+        System.out.println("\nAvailable Filter Options:");
+        System.out.println("1. By Category");
+        System.out.println("2. By Brand");
+        System.out.println("3. By Price Range");
         do {
-            System.out.println("\nAvailable Filter Options:");
-            System.out.println("1. By Category");
-            System.out.println("2. By Brand");
-            System.out.println("3. By Price Range");
-            do {
-                System.out.println("\nFilter by Category? (or input '0' to cancel)");
-                System.out.print("'y' - yes | 'n' - no | '0' - back\n>> ");
-                input = scanner.next();
-                if(input.equals("0")) { return false; }
-            } while (!(input.equals("y") || input.equals("n") || input.equals("0")));
-            if (input.equals("y")) {
-                categoryFilter = true;
-            }
-            do {
-                System.out.println("\nFilter by Brand? (or input '0' to cancel)");
-                System.out.print("'y' - yes | 'n' - no | '0' - back\n>> ");
-                input = scanner.next();
-                if(input.equals("0")) { return false; }
-            } while (!(input.equals("y") || input.equals("n") || input.equals("0")));
-            if (input.equals("y")) {
-                brandFilter = true;
-            }
-            do {
-                System.out.println("\nFilter by Price? (or input '0' to cancel)");
-                System.out.print("'y' - yes | 'n' - no | '0' - back\n>> ");
-                input = scanner.next();
-                if(input.equals("0")) { return false; }
-            } while (!(input.equals("y") || input.equals("n") || input.equals("0")));
-            if (input.equals("y")) {
-                priceRangeFilter = true;
-            }
+            System.out.println("\nFilter by Category? (or input '0' to cancel)");
+            System.out.print("'y' - yes | 'n' - no | '0' - back\n>> ");
+            input = scanner.next();
+            if(input.equals("0")) { return false; }
         } while (!(input.equals("y") || input.equals("n") || input.equals("0")));
+        if (input.equals("y")) {
+            categoryFilter = true;
+        }
+        do {
+            System.out.println("\nFilter by Brand? (or input '0' to cancel)");
+            System.out.print("'y' - yes | 'n' - no | '0' - back\n>> ");
+            input = scanner.next();
+            if(input.equals("0")) { return false; }
+        } while (!(input.equals("y") || input.equals("n") || input.equals("0")));
+        if (input.equals("y")) {
+            brandFilter = true;
+        }
+        do {
+            System.out.println("\nFilter by Price? (or input '0' to cancel)");
+            System.out.print("'y' - yes | 'n' - no | '0' - back\n>> ");
+            input = scanner.next();
+            if(input.equals("0")) { return false; }
+        } while (!(input.equals("y") || input.equals("n")));
+        if (input.equals("y")) {
+            priceRangeFilter = true;
+        }
         String query = "SELECT * FROM product";
         if (categoryFilter || brandFilter || priceRangeFilter) {
             query += " WHERE";
@@ -459,14 +503,21 @@ public class OSS {
         do {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
+            double discPrice = rset.getDouble("discountprice");
             String productId = rset.getString("productID");
             result.add(productId);
             System.out.println();
             System.out.println("Product #" + ++count);
+            if(discPrice != 0) {
+                System.out.println("This product has a discount!");
+            }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             System.out.printf("Product ID    : %s%n", productId);
             System.out.printf("Product Name  : %s%n", productName);
             System.out.printf("Price         : $%.2f%n", price);
+            if(discPrice != 0) {
+                System.out.printf("Discounted    : $%.2f%n", discPrice);
+            }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         } while (rset.next());
         return true;
@@ -485,15 +536,22 @@ public class OSS {
         do {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
+            double discPrice = rset.getDouble("discountprice");
             String productId = rset.getString("productID");
             result.add(productId);
 
             System.out.println();
             System.out.println("Product #" + ++count);
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            if(discPrice != 0) {
+                System.out.println("This product has a discount!");
+            }
             System.out.printf("Product ID    : %s%n", productId);
             System.out.printf("Product Name  : %s%n", productName);
             System.out.printf("Price         : $%.2f%n", price);
+            if(discPrice != 0) {
+                System.out.printf("Discounted    : $%.2f%n", discPrice);
+            }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         } while(rset.next());
         return true;
@@ -524,6 +582,7 @@ public class OSS {
         if (rset.next()) {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
+            double discPrice = rset.getDouble("discountprice");
             int stock = rset.getInt("stock_qty");
             String description = rset.getString("description");
             String dimensions = rset.getString("dimension");
@@ -532,8 +591,14 @@ public class OSS {
             System.out.println();
             System.out.println("Product Details");
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            if(discPrice == 0) {
+                System.out.println("This product has a discount!");
+            }
             System.out.printf("%-15s: %s%n", "Product Name", productName);
             System.out.printf("%-15s: $%.2f%n", "Price", price);
+            if(discPrice == 0) {
+                System.out.printf("%-15s: $%.2f%n", "Discounted", discPrice);
+            }
             System.out.printf("%-15s: %d%n", "Stock", stock);
             System.out.printf("%-15s: %s%n", "Description", description);
             System.out.printf("%-15s: %s%n", "Dimensions", dimensions);
@@ -609,7 +674,7 @@ public class OSS {
     }
     public boolean viewCart() throws SQLException {
         result = new ArrayList<String>();
-        String query = "SELECT p.productID, p.name, p.price, c.quantity " +
+        String query = "SELECT p.productID, p.name, p.price, p.discountprice, c.quantity " +
                 "FROM cart c " +
                 "JOIN product p ON c.productID = p.productID " +
                 "WHERE c.userID = '" + userID + "'";
@@ -629,6 +694,7 @@ public class OSS {
             String productName = rset.getString("name");
             int quantity = rset.getInt("quantity");
             double price = rset.getDouble("price");
+            double discPrice = rset.getDouble("discountprice");
             System.out.println();
             System.out.println("Product #" + ++count);
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -636,7 +702,8 @@ public class OSS {
             System.out.printf("%-15s: %s%n", "Product Name", productName);
             System.out.printf("%-15s: %d%n", "Quantity", quantity);
             System.out.printf("%-15s: $%.2f%n", "Price", price);
-            System.out.printf("%-15s: $%.2f%n", "Total Price", price * quantity);
+            System.out.printf("%-15s: $%.2f%n", "Discounted", discPrice);
+            System.out.printf("%-15s: $%.2f%n", "Total Price", discPrice * quantity);
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         } while (rset.next());
 
@@ -644,8 +711,7 @@ public class OSS {
     }
     public String generateOrderID() throws SQLException {
         ResultSet rset = getStmt(conn).executeQuery("SELECT MAX(ORDERID) AS MAX_ORDERID FROM orderdetails");
-        String orderID = "O001"; // Default order ID if no existing orders are found
-
+        String orderID = "O001";
         if (rset.next()) {
             String maxOrderID = rset.getString("MAX_ORDERID");
             if (maxOrderID != null) {
@@ -662,7 +728,7 @@ public class OSS {
             System.out.println("Cannot checkout since cart is empty.");
             return false;
         }
-        ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.stock_qty, p.name, p.price, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
+        ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.stock_qty, p.name, p.price,p.discountprice, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
         getStmt(conn).execute("COMMIT");
 
         while(rset.next()) {
@@ -686,7 +752,11 @@ public class OSS {
                 quantity = stock;
                 getStmt(conn).execute("UPDATE CART SET QUANTITY = " + quantity +" WHERE USERID = '" + userID + "' AND PRODUCTID = '" + productID + "'");
             }
+            double discountprice = rset.getDouble("discountprice");
             double price = rset.getDouble("price");
+            if(discountprice != 0){
+                price = discountprice;
+            }
             double totalPrice = price * quantity;
             getStmt(conn).execute("COMMIT");
             String input;
@@ -897,7 +967,7 @@ public class OSS {
             return false;
         }
 
-        getStmt(conn).execute(String.format("INSERT INTO PRODUCT (PRODUCTID, NAME, CATEGORY, DESCRIPTION, PRICE, WEIGHT, DIMENSION, BRAND, STOCK_QTY) VALUES ('%s', '%s', '%s','%s', %f, %f, '%s', '%s',%d)",productID, name, category, description, price, weight,dimension,brand,quantity ));
+        getStmt(conn).execute(String.format("INSERT INTO PRODUCT (PRODUCTID, NAME, CATEGORY, DESCRIPTION, PRICE, WEIGHT, DIMENSION, BRAND, STOCK_QTY, VIEWS) VALUES ('%s', '%s', '%s','%s', %f, %f, '%s', '%s',%d, 0)",productID, name, category, description, price, weight,dimension,brand,quantity ));
         getStmt(conn).execute("COMMIT");
         return true;
     }
@@ -1042,6 +1112,25 @@ public class OSS {
             System.out.print("\nNew value:\n>> ");
             if(input == 7 || input == 8 || input == 9 || input == 11 || input == 12){
                 getStmt(conn).execute(String.format("UPDATE PRODUCT SET %s = %d WHERE productID = '%s'",criterion,scanner.nextInt(),productName));
+                getStmt(conn).execute("COMMIT");
+            }
+            else if (input == 2){ // promotion adding/editing
+                getStmt(conn).execute(String.format("UPDATE PRODUCT SET %s = '%s' WHERE productID = '%s'",criterion,scanner.next(),productName));
+                ResultSet rset2 = getStmt(conn).executeQuery(String.format("SELECT * FROM PRODUCT WHERE PRODUCTID = '%s'",productName));
+                float currentPrice = 0;
+                String promotionID = "";
+                if(rset2.next()) {
+                    currentPrice = rset2.getFloat("PRICE");
+                    promotionID = rset2.getString("PROMOTIONID");
+                }
+                ResultSet rset3 = getStmt(conn).executeQuery(String.format("SELECT * FROM PROMOTION WHERE PROMOTIONID = '%s'",promotionID));
+                float discountRate = 0;
+                float discountPrice = 0;
+                if(rset3.next()) {
+                    discountRate = rset3.getFloat("DISCOUNTRATE");
+                    discountPrice = currentPrice * (1-discountRate);
+                }
+                getStmt(conn).execute(String.format("UPDATE PRODUCT SET DISCOUNTPRICE = '%s' WHERE productID = '%s'",discountPrice,productName));
                 getStmt(conn).execute("COMMIT");
             }
             else{
@@ -1251,5 +1340,173 @@ public class OSS {
         getStmt(conn).execute("COMMIT");
         System.out.println ("Thank You for your time. Your review has been successfully updated");
         return true;
+    }
+    public boolean changeTransportationFee() throws SQLException {
+        System.out.println("Select transportation fee to change");
+        System.out.println("1. Basic");
+        System.out.println("2. Express");
+        System.out.printf("0. Cancel");
+        System.out.print(">>");
+        int input = scanner.nextInt();
+        while(input!=1 && input!=2 && input!=0){
+            System.out.println("Invalid input! Enter 0, 1 or 2");
+            System.out.print(">> ");
+            input = scanner.nextInt();
+        }
+        if(input == 0){
+            return false;
+        }
+        System.out.print("Enter new fee\n>> ");
+        float fee = scanner.nextFloat();
+        while(fee<0){
+            System.out.println("New fee cannot be less than $0");
+            System.out.print("Re-enter new fee\n>> ");
+            fee = scanner.nextFloat();
+        }
+        if(input == 1){
+            getStmt(conn).execute("UPDATE TRANSPORT SET COST = "+fee+" WHERE TRANSPORTID = 'E1'");
+        }
+        else if(input == 2){
+            getStmt(conn).execute("UPDATE TRANSPORT SET COST = "+fee+" WHERE TRANSPORTID = 'B1'");
+
+        }
+        System.out.println("Fee update successfully.");
+        return true;
+    }
+    public boolean editProfile() throws SQLException {
+        String input = "";
+        System.out.println ("final update before sleep");
+        System.out.println ("\nPlease select from the following options:");
+        System.out.println("1. Change Email Address\n2. Change Password\n3. Add Address\n0. Back");
+        System.out.print(">> ");
+        input = scanner.next();
+        while (!(input.equals("1")||input.equals("2")||input.equals("3")||input.equals("0"))){
+            System.out.print("Invalid Input. Please follow the following instructions -");
+            System.out.print("1 - Change Email Address | 2 - Change Password | 3 - Add Address | 0 - Back");
+            System.out.print(">> ");
+            input = scanner.next();
+        }
+        if (input.equals("0")) {return false;}
+        else if (input.equals("1")) {
+            // changing the user email address
+            System.out.print("\nYour current email address: ");
+            ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT email FROM userdata WHERE USERID ='%s'", userID));
+            while (rset.next()) {
+                System.out.println(rset.getString(1));
+            }
+            System.out.println("\nContinue changing email address?");
+            System.out.println("y - yes | n - no");
+            System.out.print(">>");
+            input = scanner.next();
+            while (!(input.equals("y") || input.equals("n"))) {
+                System.out.println("Invalid Input. Please enter y | n");
+                System.out.print(">> ");
+                input = scanner.next();
+            }
+            if (input.equals("n")) {
+                return false;
+            } else {
+                System.out.print("Please enter your new address: ");
+                input = scanner.next(); // can consider checking if email address is still the same
+                getStmt(conn).execute(String.format("UPDATE USERDATA SET EMAIL = '%s' WHERE USERID = '%s'", input, userID));
+                getStmt(conn).execute("COMMIT");
+                System.out.println("\nEmail Address has been updated successfully");
+                return false;
+            }
+        } else if (input.equals("2")) {
+            // Changing user password
+            String pass1 = "";
+            String pass2 = "";
+            String chc = "";
+            String reqPass = "";
+            System.out.println("\nWARNING: You are attempting to change confidential information");
+            System.out.println("Changed passwords can never be recovered.");
+            System.out.println("\nDo you still wish to proceed?");
+            System.out.println("y - yes | n - no");
+            System.out.print(">> ");
+            scanner.skip("\n");
+            chc = scanner.next();
+            while (!(chc.equals("y") || chc.equals("n"))) {
+                System.out.print("Invalid Input. Please follow the following instructions -");
+                System.out.println("\nContinue changing password?");
+                System.out.println("y - yes | n - no");
+                System.out.print(">> ");
+                chc = scanner.next();
+            }
+            if (chc.equals("n")) {
+                return false;
+            } else {
+                ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT password FROM userdata WHERE USERID ='%s'", userID));
+                System.out.println("\nSeurity Instructions - Please enter your current password");
+                System.out.print(">> ");
+                chc = scanner.next();
+                int attempt = 5;
+                if (rset.next()) {
+                    reqPass = rset.getString(1);
+                }
+                while (!(chc.equals(reqPass)) && attempt > 1) {
+                    System.out.println("\nThe password you have entered is incorrect.");
+                    System.out.print("You have " + --attempt + " chances remaining");
+                    System.out.println("\n Re-Enter Password");
+                    System.out.print(">> ");
+                    chc = scanner.next();
+                }
+                if (attempt == 0) {
+                    System.out.println("\nRequest for Password Change has been denied");
+                    return false;
+                } else {
+                    System.out.println("\nPlease enter your new password");
+                    System.out.print(">> ");
+                    pass1 = scanner.next();
+                    System.out.println("\nConfirm your new password");
+                    System.out.print(">> ");
+                    pass2 = scanner.next();
+                    attempt = 3;
+                    while (!(pass1.equals(pass2)) && attempt > 1) {
+                        System.out.println("\nThe password you have entered is incorrect.");
+                        System.out.print("You have " + --attempt + " chances remaining");
+                        System.out.println("\n Re-Enter Password");
+                        System.out.print(">> ");
+                        pass2 = scanner.next();
+                    }
+                    if (attempt == 0) {
+                        System.out.println("\nRequest for Password Change has been denied");
+                        return false;
+                        //return false;
+                    }
+                    getStmt(conn).execute(String.format("UPDATE USERDATA SET PASSWORD = '%s' WHERE USERID = '%s'", pass2, userID));
+                    getStmt(conn).execute("COMMIT");
+                    System.out.println("\nPassword has been updated successfully");
+                    return false;
+                }
+            }
+        }else if (input.equals("3")){
+            // this part is for user address adding
+            String userInput= ""; String userChc = "";
+            ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT address FROM USERADDRESSES WHERE USERID ='%s'", userID));
+            int count = 1;
+            while (rset.next()) System.out.println(count++ + " " + rset.getString(1));
+            System.out.println("\nWould you still like to add a new one?");
+            System.out.println("\n y - yes | n - no");
+            System.out.print(">> ");
+            userChc = scanner.next();
+            scanner.nextLine();
+            while (!(userChc.equals("y")||userChc.equals("n"))){
+                System.out.println("\nWrong Input. Please try again.");
+                System.out.println("\n y - yes | n - no");
+                System.out.print(">> ");
+                userChc = scanner.next();
+                scanner.nextLine();
+            }
+            if (userChc.equals("n")) return false;
+            System.out.println("\n Please insert new address");
+            System.out.print(">> ");
+            userInput = scanner.nextLine();
+
+            getStmt(conn).execute(String.format("INSERT INTO USERADDRESSES VALUES ('%s', '%s')", userID, userInput));
+            getStmt(conn).execute("COMMIT");
+            System.out.println ("\nAddress has been updated successfully");
+        }
+        return false;
     }
 }

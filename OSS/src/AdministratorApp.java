@@ -10,6 +10,7 @@ public class AdministratorApp {
         scanner = new Scanner(System.in);
         this.oss = oss;
     }
+
     private void promotionManagement() throws SQLException{
         while(true){
             System.out.println("\nPlease choose from the following options:");
@@ -33,6 +34,7 @@ public class AdministratorApp {
                 case "4":
                     oss.getPromotion();
                     break;
+
                 case "0":
                     return;
             }
@@ -44,6 +46,9 @@ public class AdministratorApp {
             System.out.println("1. Add a product");
             System.out.println("2. Remove a product");
             System.out.println("3. Edit a product");
+            System.out.println("4. Display All Products");
+            System.out.println("5. Filter Products");
+            System.out.println("6. Search Products");
             System.out.println("0. Back");
             System.out.print(">> ");
             String input = scanner.next();
@@ -72,10 +77,23 @@ public class AdministratorApp {
                         System.out.println("\nFailed to edit product");
                     }
                     break;
+                case "4":
+                    oss.displayProduct();
+                    break;
+                case "5":
+                    oss.filterProduct();
+                    break;
+                case "6":
+                    oss.searchProduct();
+                    break;
                 case "0":
                     return;
             }
         }
+    }
+
+    private void transportationManagement() throws SQLException {
+        oss.changeTransportationFee();
     }
     public void run() throws SQLException {
         System.out.println();
@@ -88,9 +106,8 @@ public class AdministratorApp {
             System.out.println("1. Product management");
             System.out.println("2. Report management");
             System.out.println("3. Promotion management");
-            System.out.println("4. Display All Products");
-            System.out.println("5. Filter Products");
-            System.out.println("6. Search Products");
+            System.out.println("4. Transportation management");
+
             System.out.println("0. Log Out");
             System.out.print(">> ");
             String input = scanner.nextLine();
@@ -110,13 +127,7 @@ public class AdministratorApp {
                     promotionManagement();
                     break;
                 case "4":
-                    oss.displayProduct();
-                    break;
-                case "5":
-                    oss.filterProduct();
-                    break;
-                case "6":
-                    oss.searchProduct();
+                    transportationManagement();
                     break;
             }
         }

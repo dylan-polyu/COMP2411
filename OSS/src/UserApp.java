@@ -43,7 +43,7 @@ public class UserApp {
                     flag = oss.viewCart();
                     break;
                 case "5":
-//                    flag = oss.editProfile();
+                    flag = oss.editProfile();
                     break;
                 default:
                     System.out.println("Invalid input. Please enter a valid option.");
