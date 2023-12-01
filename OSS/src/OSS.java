@@ -593,12 +593,12 @@ public class OSS {
             System.out.println();
             System.out.println("Product Details");
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-            if(discPrice == 0) {
+            if(discPrice != 0) {
                 System.out.println("This product has a discount!");
             }
             System.out.printf("%-15s: %s%n", "Product Name", productName);
             System.out.printf("%-15s: $%.2f%n", "Price", price);
-            if(discPrice == 0) {
+            if(discPrice != 0) {
                 System.out.printf("%-15s: $%.2f%n", "Discounted", discPrice);
             }
             System.out.printf("%-15s: %d%n", "Stock", stock);
