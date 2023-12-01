@@ -1,4 +1,3 @@
-import java.io.*;
 import java.sql.*;
 import java.util.Scanner;
 
@@ -38,11 +37,11 @@ public class Application {
                         }
                     } while(true);
                     if(loginType.equals("a")){
-                        loginFlag = oss.loginAdminAccount();
+                        loginFlag = oss.loginAdmin();
                         if(loginFlag)userType = "a";
                     }
                     else{
-                        loginFlag = oss.loginUserAccount();
+                        loginFlag = oss.loginUser();
                         if(loginFlag) userType = "u";
                     }
                     break;
@@ -60,10 +59,10 @@ public class Application {
                         }
                     } while(true);
                     if(createType.equals("a")){
-                        oss.createAdminAccount();
+                        oss.createAdmin();
                     }
                     else{
-                        oss.createUserAccount();
+                        oss.createUser();
                     }
                     break;
                 default:
@@ -79,5 +78,6 @@ public class Application {
                 userapp.run();
             }
         }
+
     }
 }
