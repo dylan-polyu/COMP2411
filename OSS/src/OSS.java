@@ -108,10 +108,12 @@ public class OSS {
             if (rset.next() && rset.getInt(1) >= 1) {
                 break;
             } else {
-                System.out.print("\nUsername does not exist! Do you want to make a new account? (Y to create new account / N to retry)\n>> ");
+                System.out.println("\nUsername does not exist! Do you want to make a new account?");
+                System.out.print("'y' - new account | 'n' - retry\n>> ");
                 String input = scanner.next();
-                if (input.equals("Y")) {
-                    System.out.print("Create user or admin account? (u for user/ a for admin)\n>> ");
+                if (input.equals("y")) {
+                    System.out.print("\nCreate user or admin account?");
+                    System.out.print("'u' - user account | 'a' - admin account\n>> ");
                     input = scanner.next();
                     if (input.equals("u")) {
                         createUserAccount();
@@ -910,7 +912,7 @@ public class OSS {
 
         //product ID check
         do {
-            System.out.println("Enter product name >> ");
+            System.out.print("Enter product name\n>> ");
             productID = name = scanner.next();
             if(productID.equals("-1")){
                 return false;
@@ -925,13 +927,13 @@ public class OSS {
             }
         } while(true);
 
-        System.out.println("Enter brand >> ");
+        System.out.print("Enter brand\n>> ");
         brand =  scanner.next();
         if(brand.equals("-1")){
             return false;
         }
 
-        System.out.println("Enter description >> ");
+        System.out.print("Enter description\n>> ");
 
         scanner.nextLine();
         description =  scanner.nextLine();
@@ -939,31 +941,31 @@ public class OSS {
             return false;
         }
 
-        System.out.println("Enter category >> ");
+        System.out.print("Enter category\n>> ");
         category =  scanner.next();
         if(category.equals("-1")){
             return false;
         }
 
-        System.out.println("Enter price >> ");
+        System.out.print("Enter price\n>> ");
         price =  scanner.nextFloat();
         if(price == -1){
             return false;
         }
 
-        System.out.println("Enter weight >> ");
+        System.out.print("Enter weight\n>> ");
         weight =  scanner.nextFloat();
         if(weight == -1){
             return false;
         }
 
-        System.out.println("Enter dimension >> ");
+        System.out.print("Enter dimension\n>> ");
         dimension =  scanner.next();
         if(dimension.equals("-1")){
             return false;
         }
 
-        System.out.println("Enter quantity >> ");
+        System.out.print("Enter quantity\n>> ");
         quantity = scanner.nextInt();
         if(quantity == -1){
             return false;
@@ -1148,7 +1150,7 @@ public class OSS {
         String promotionID, startDate, endDate;
         float discountRate;
         do {
-            System.out.println("Enter promotion ID>> ");
+            System.out.print("Enter promotion ID\n>> ");
             promotionID = scanner.next();
             if(promotionID.equals("-1")){
                 return;
@@ -1162,18 +1164,18 @@ public class OSS {
                 System.out.println("Promotion name has already existed!");
             }
         } while(true);
-        System.out.println("Enter discount rate\n>> ");
+        System.out.print("Enter discount rate\n>> ");
         discountRate =  scanner.nextFloat();
         if(discountRate == -1){
             return;
         }
         scanner = new Scanner(System.in);
-        System.out.println("Enter start date >> ");
+        System.out.print("Enter start date\n>> ");
         startDate =  scanner.next();
         if(startDate.equals("-1")){
             return;
         }
-        System.out.println("Enter end date >> ");
+        System.out.print("Enter end date\n>> ");
         endDate =  scanner.next();
         if(endDate.equals("-1")){
             return;
@@ -1184,7 +1186,7 @@ public class OSS {
     public Boolean getPromotion() throws SQLException {
         String promotionID;
         do {
-            System.out.println("Enter promotion ID >> ");
+            System.out.print("Enter promotion ID\n>> ");
             promotionID = scanner.next();
             if(promotionID.equals("-1")){
                 return false;
@@ -1241,7 +1243,7 @@ public class OSS {
             System.out.println("2. StartDate");
             System.out.println("3. EndDate");
             System.out.println("0. Cancel");
-            System.out.println("Select criterion number to change >> ");
+            System.out.print("Select criterion number to change\n>> ");
             int input = scanner.nextInt();
             String criterion = "";
             while(true) {
@@ -1277,7 +1279,7 @@ public class OSS {
                     return false;
                 }
             }
-            System.out.println("New value >> ");
+            System.out.print("New value\n>> ");
             if(input == 1){
                 getStmt(conn).execute(String.format("UPDATE PROMOTION SET %s = %d WHERE PROMOTIONID = '%s'",criterion,scanner.nextInt(),promotionID));
                 getStmt(conn).execute("COMMIT");
@@ -1347,7 +1349,7 @@ public class OSS {
         System.out.println("Select transportation fee to change");
         System.out.println("1. Basic");
         System.out.println("2. Express");
-        System.out.printf("0. Cancel");
+        System.out.println("0. Cancel");
         System.out.print(">>");
         int input = scanner.nextInt();
         while(input!=1 && input!=2 && input!=0){
