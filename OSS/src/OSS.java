@@ -1,4 +1,3 @@
-import java.io.*;
 import java.sql.*;
 import java.util.Scanner;
 import java.util.*;
@@ -31,7 +30,7 @@ public class OSS {
         conn.close();
     }
     String userID = "";
-    public boolean loginUserAccount() throws SQLException {
+    public boolean loginUser() throws SQLException {
         scanner = new Scanner(System.in);
         String enteredUserID, enteredPassword;
         ResultSet rset;
@@ -65,9 +64,9 @@ public class OSS {
                     input = scanner.next();
                 }
                 if (input.equals("u")) {
-                    createUserAccount();
+                    createUser();
                 } else {
-                    createAdminAccount();
+                    createAdmin();
                 }
             }
         } while (true);
@@ -92,7 +91,7 @@ public class OSS {
         userID = enteredUserID;
         return (attempts >= 0);
     }
-    public boolean loginAdminAccount() throws SQLException {
+    public boolean loginAdmin() throws SQLException {
         scanner = new Scanner(System.in);
         String enteredUserID, enteredPassword;
         ResultSet rset;
@@ -116,9 +115,9 @@ public class OSS {
                     System.out.print("'u' - user account | 'a' - admin account\n>> ");
                     input = scanner.next();
                     if (input.equals("u")) {
-                        createUserAccount();
+                        createUser();
                     } else if (input.equals("a")) {
-                        createAdminAccount();
+                        createAdmin();
                     } else {
                         System.out.println("Invalid input. Redirecting...");
                     }
@@ -147,7 +146,7 @@ public class OSS {
         userID = enteredUserID;
         return (attempts >= 0);
     }
-    public boolean createUserAccount() throws SQLException {
+    public boolean createUser() throws SQLException {
         scanner = new Scanner(System.in);
         String enteredUserID, enteredPassword, firstName, lastName, dateOfBirth, email, phoneNumber, address;
         ResultSet rset;
@@ -173,7 +172,7 @@ public class OSS {
                         input = scanner.next();
                     }
                     if (input.equals("y")) {
-                        return loginUserAccount();
+                        return loginUser();
                     } else {
                         return false;
                     }
@@ -206,7 +205,7 @@ public class OSS {
         userID = enteredUserID;
         return true;
     }
-    public boolean createAdminAccount() throws SQLException {
+    public boolean createAdmin() throws SQLException {
         scanner = new Scanner(System.in);
         String enteredUserID, enteredPassword, firstName, lastName, dateOfBirth, email, phoneNumber, address;
         ResultSet rset;
@@ -226,7 +225,7 @@ public class OSS {
                     System.out.print("'y' - login | 'n' - cancel\n>> ");
                     String input = scanner.next();
                     if (input.equals("Y")) {
-                        return loginAdminAccount();
+                        return loginAdmin();
                     }
                     if (input.equals("N")) {
                         return false;
@@ -1379,7 +1378,6 @@ public class OSS {
     }
     public boolean editProfile() throws SQLException {
         String input = "";
-        System.out.println ("final update before sleep");
         System.out.println ("\nPlease select from the following options:");
         System.out.println("1. Change Email Address\n2. Change Password\n3. Add Address\n0. Back");
         System.out.print(">> ");
