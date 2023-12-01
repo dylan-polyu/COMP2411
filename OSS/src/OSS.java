@@ -708,18 +708,16 @@ public class OSS {
                     return false;
                 }
                 case "1" -> {
-                    transport = "B1";
+                    transport = "B";
                 }
                 case "2" -> {
-                    transport = "E1";
+                    transport = "E";
                 }
             }
-            ResultSet checkResult = getStmt(conn).executeQuery("SELECT PRODUCTID FROM orderdetails WHERE PRODUCTID = '" + productID + "' AND userID = '" + userID + "'");
-            if (!checkResult.next()) {
-                String orderID = generateOrderID();
-                getStmt(conn).execute("INSERT INTO orderdetails (ORDERID, TOTALPRICE, PRODUCTID, TRANSPORTID, USERID) VALUES ('" + orderID + "', " + totalPrice + ", '" + productID + "', '" + transport + "', '" + userID + "')");
-                getStmt(conn).execute("COMMIT");
-            }
+            String orderID = generateOrderID();
+            getStmt(conn).execute("INSERT INTO orderdetails (ORDERID, TOTALPRICE, PRODUCTID, TRANSPORTID, USERID) VALUES ('" + orderID + "', " + totalPrice + ", '" + productID + "', '" + transport + "', '" + userID + "')");
+            getStmt(conn).execute("COMMIT");
+
         }
         getStmt(conn).execute("COMMIT");
         return true;
@@ -797,20 +795,15 @@ public class OSS {
             getStmt(conn).execute("UPDATE PRODUCT SET STOCK_QTY = " + stockQ +", UNITS_SOLD = " + units_sold + " WHERE PRODUCTID = '" + productID + "'");
             getStmt(conn).execute("COMMIT");
         }
-        ResultSet rset = getStmt(conn).executeQuery("SELECT PRODUCTID FROM CART WHERE USERID = '" + userID + "'");
-        ResultSet temp;
-        while (rset.next()) {
-            String prodID = rset.getString("PRODUCTID");
-            temp = getStmt(conn).executeQuery("SELECT * FROM ORDERDETAILS WHERE PRODUCTID = '" + prodID + "' AND userid = '" + userID + "'");
-        }
+        ResultSet rset = getStmt(conn).executeQuery("SELECT * FROM ORDERDETAILS WHERE ORDERID NOT IN (SELECT ORDERID FROM BILL) AND USERID = '" + userID + "'");
         List<String> orderIDs = new ArrayList<String>();
         while (rset.next()) {
+            String prodID = rset.getString("PRODUCTID");
             String orderId = rset.getString("ORDERID");
             orderIDs.add(orderId);
             double totalprice = rset.getDouble("TOTALPRICE");
             getStmt(conn).execute(String.format("INSERT INTO bill (ORDERID, BILLDATE, PAYMENTMETHOD, FINALPRICE, DESTINATION) VALUES ('%s', to_date('%s','YYYY-MM-DD'), '%s', %f, '%s')", orderId, billDate, paymentMethod, totalprice, selectedAddress));
-            String productID = rset.getString("PRODUCTID");
-            getStmt(conn).execute("DELETE FROM cart WHERE PRODUCTID = '" + productID + "' AND userID = '" + userID + "'");
+            getStmt(conn).execute("DELETE FROM cart WHERE PRODUCTID = '" + prodID + "' AND userID = '" + userID + "'");
             getStmt(conn).execute("COMMIT");
         }
         System.out.println("\nPayment successful. Here is your bill:");
@@ -819,7 +812,13 @@ public class OSS {
             ResultSet billSet = getStmt(conn).executeQuery("SELECT * FROM orderdetails WHERE ORDERID = '" + id + "'");
             if (billSet.next()) {
                 String orderID = billSet.getString("orderID");
-                float totalPrice = billSet.getFloat("TOTALPRICE");
+                String tid = billSet.getString("transportid");
+                ResultSet tSet = getStmt(conn).executeQuery("SELECT COST FROM TRANSPORT WHERE TRANSPORTID = '" + tid + "'");
+                float tcost = 0;
+                if(tSet.next()) {
+                    tcost = tSet.getFloat("COST");
+                }
+                float totalPrice = billSet.getFloat("TOTALPRICE") + tcost;
                 System.out.printf("Order ID: %s%n", orderID);
 
                 ResultSet prodSet = getStmt(conn).executeQuery("SELECT name FROM PRODUCT WHERE PRODUCTID = '" + billSet.getString("PRODUCTID") + "'");
@@ -827,7 +826,8 @@ public class OSS {
                     String productName = prodSet.getString("name");
                     System.out.printf("Product Name: %s%n", productName);
                 }
-                System.out.printf("Total Price: %.2f%n", totalPrice);
+                System.out.printf("Transport Price: $%.2f%n", tcost);
+                System.out.printf("Total Price: $%.2f%n", totalPrice);
                 System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             }
         }
