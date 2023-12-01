@@ -10,7 +10,6 @@ public class AdministratorApp {
         scanner = new Scanner(System.in);
         this.oss = oss;
     }
-
     private void promotionManagement() throws SQLException{
         while(true){
             System.out.println("\nPlease choose from the following options:");

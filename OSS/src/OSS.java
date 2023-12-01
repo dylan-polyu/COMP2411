@@ -204,7 +204,6 @@ public class OSS {
         userID = enteredUserID;
         return true;
     }
-
     public boolean createAdminAccount() throws SQLException {
         scanner = new Scanner(System.in);
         String enteredUserID, enteredPassword, firstName, lastName, dateOfBirth, email, phoneNumber, address;
@@ -643,19 +642,19 @@ public class OSS {
 
         return true;
     }
-
     public String generateOrderID() throws SQLException {
-        String orderID = "O001";
-        while (true) {
-            ResultSet rset = getStmt(conn).executeQuery("SELECT ORDERID FROM orderdetails WHERE ORDERID = '" + orderID + "'");
-            if(rset.next()) {
-                int numericPart = Integer.parseInt(orderID.substring(1));
+        ResultSet rset = getStmt(conn).executeQuery("SELECT MAX(ORDERID) AS MAX_ORDERID FROM orderdetails");
+        String orderID = "O001"; // Default order ID if no existing orders are found
+
+        if (rset.next()) {
+            String maxOrderID = rset.getString("MAX_ORDERID");
+            if (maxOrderID != null) {
+                int numericPart = Integer.parseInt(maxOrderID.substring(1));
                 numericPart++;
                 orderID = String.format("O%03d", numericPart);
-            } else {
-                break;
             }
         }
+
         return orderID;
     }
     public boolean checkout() throws SQLException {
@@ -689,7 +688,6 @@ public class OSS {
             }
             double price = rset.getDouble("price");
             double totalPrice = price * quantity;
-            ResultSet checkResult = getStmt(conn).executeQuery("SELECT PRODUCTID FROM orderdetails WHERE PRODUCTID = '" + productID + "'");
             getStmt(conn).execute("COMMIT");
             String input;
             do {
@@ -707,7 +705,7 @@ public class OSS {
             String transport = "";
             switch (input) {
                 case "0" -> {
-                    continue;
+                    return false;
                 }
                 case "1" -> {
                     transport = "B1";
@@ -716,6 +714,7 @@ public class OSS {
                     transport = "E1";
                 }
             }
+            ResultSet checkResult = getStmt(conn).executeQuery("SELECT PRODUCTID FROM orderdetails WHERE PRODUCTID = '" + productID + "' AND userID = '" + userID + "'");
             if (!checkResult.next()) {
                 String orderID = generateOrderID();
                 getStmt(conn).execute("INSERT INTO orderdetails (ORDERID, TOTALPRICE, PRODUCTID, TRANSPORTID, USERID) VALUES ('" + orderID + "', " + totalPrice + ", '" + productID + "', '" + transport + "', '" + userID + "')");
@@ -755,7 +754,6 @@ public class OSS {
         int count = 0;
         String inputStr; int inputInt;
         while(addr.next()) {
-            System.out.println(addr.getString("address"));
             addresses.add(addr.getString("address"));
         }
         if (!addresses.isEmpty()) {
@@ -799,7 +797,12 @@ public class OSS {
             getStmt(conn).execute("UPDATE PRODUCT SET STOCK_QTY = " + stockQ +", UNITS_SOLD = " + units_sold + " WHERE PRODUCTID = '" + productID + "'");
             getStmt(conn).execute("COMMIT");
         }
-        ResultSet rset = getStmt(conn).executeQuery("SELECT ORDERID, PRODUCTID, TOTALPRICE FROM orderdetails WHERE USERID = '" + userID + "'");
+        ResultSet rset = getStmt(conn).executeQuery("SELECT PRODUCTID FROM CART WHERE USERID = '" + userID + "'");
+        ResultSet temp;
+        while (rset.next()) {
+            String prodID = rset.getString("PRODUCTID");
+            temp = getStmt(conn).executeQuery("SELECT * FROM ORDERDETAILS WHERE PRODUCTID = '" + prodID + "' AND userid = '" + userID + "'");
+        }
         List<String> orderIDs = new ArrayList<String>();
         while (rset.next()) {
             String orderId = rset.getString("ORDERID");
@@ -812,8 +815,8 @@ public class OSS {
         }
         System.out.println("\nPayment successful. Here is your bill:");
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        for (int i = 0; i < orderIDs.size(); i++) {
-            ResultSet billSet = getStmt(conn).executeQuery("SELECT * FROM orderdetails WHERE ORDERID = '" + orderIDs.get(i) + "'");
+        for (String id : orderIDs) {
+            ResultSet billSet = getStmt(conn).executeQuery("SELECT * FROM orderdetails WHERE ORDERID = '" + id + "'");
             if (billSet.next()) {
                 String orderID = billSet.getString("orderID");
                 float totalPrice = billSet.getFloat("TOTALPRICE");
