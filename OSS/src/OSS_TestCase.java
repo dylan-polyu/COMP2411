@@ -1,12 +1,8 @@
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
+import org.testng.annotations.Test;
+import static org.testng.AssertJUnit.*;
 
 
 
@@ -60,7 +56,7 @@ public class OSS_TestCase {
     @Test
     public void testCreateAdmin() throws SQLException {
         // Test create a admin
-        boolean addResult = OSS.createAdmin("testAdmin", "test","test","test",
+        boolean addResult = OSS.createAdmin("tester2", "test","test","test",
                 "2023-12-02","testA@test.com","12345678");
         assertTrue("Added an admin successfully", addResult);
     }
