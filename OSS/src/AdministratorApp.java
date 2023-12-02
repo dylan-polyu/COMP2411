@@ -23,16 +23,36 @@ public class AdministratorApp {
             String input = scanner.next();
             switch(input){
                 case "1":
-                    oss.addPromotion();
+                    if(oss.addPromotion()){
+                        System.out.println("Successfully added promotion");
+                    }
+                    else{
+                        System.out.println("Failed to add promotion");
+                    }
                     break;
                 case "2":
-                    oss.removePromotion();
+                    if(oss.removePromotion()){
+                        System.out.println("Successfully removed promotion");
+                    }
+                    else{
+                        System.out.println("Failed to remove promotion");
+                    }
                     break;
                 case "3":
-                    oss.editPromotion();
+                    if(oss.editPromotion()){
+                        System.out.println("Successfully edited promotion");
+                    }
+                    else{
+                        System.out.println("Failed to edit promotion");
+                    }
                     break;
                 case "4":
-                    oss.getPromotion();
+                    if(oss.getPromotion()){
+                        System.out.println("Successfully retrieved promotion");
+                    }
+                    else{
+                        System.out.println("Failed to retrieve promotion");
+                    }
                     break;
 
                 case "0":
@@ -110,7 +130,7 @@ public class AdministratorApp {
 
             System.out.println("0. Log Out");
             System.out.print(">> ");
-            String input = scanner.nextLine();
+            String input = scanner.next();
             if (input.equals("0")) {
                 System.out.println("Thank you for visiting. See you again.");
 //                running = false;

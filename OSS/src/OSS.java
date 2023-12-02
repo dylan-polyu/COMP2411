@@ -328,7 +328,7 @@ public class OSS {
                     System.out.println("Current stock: " + stockQty);
                     System.out.println("Sales volume: " + unitsSold);
                     System.out.println("Sales: " + price*unitsSold);
-                    System.out.println("Views: " + view);
+                    System.out.println("Views: " + view );
                 } while (rset.next());
             }
             case "2" -> {
@@ -589,6 +589,7 @@ public class OSS {
             String dimensions = rset.getString("dimension");
             String brand = rset.getString("brand");
             String category = rset.getString("category");
+            int view = rset.getInt("views");
             System.out.println();
             System.out.println("Product Details");
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -606,6 +607,7 @@ public class OSS {
             System.out.printf("%-15s: %s%n", "Brand", brand);
             System.out.printf("%-15s: %s%n", "Category", category);
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            getStmt(conn).execute("UPDATE PRODUCT SET VIEWS = " + ((int)view+1)+ " WHERE PRODUCTID = '" + productID + "'");
         }
         return true;
     }
@@ -703,8 +705,12 @@ public class OSS {
             System.out.printf("%-15s: %s%n", "Product Name", productName);
             System.out.printf("%-15s: %d%n", "Quantity", quantity);
             System.out.printf("%-15s: $%.2f%n", "Price", price);
-            System.out.printf("%-15s: $%.2f%n", "Discounted", discPrice);
-            System.out.printf("%-15s: $%.2f%n", "Total Price", discPrice * quantity);
+            if(discPrice != 0) {
+                System.out.printf("%-15s: $%.2f%n", "Discounted", discPrice);
+                System.out.printf("%-15s: $%.2f%n", "Total Price", discPrice * quantity);
+            } else {
+                System.out.printf("%-15s: $%.2f%n", "Total Price", price * quantity);
+            }
             System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         } while (rset.next());
 
@@ -1145,14 +1151,14 @@ public class OSS {
         }
         return false;
     }
-    public void addPromotion() throws SQLException{
+    public boolean addPromotion() throws SQLException{
         String promotionID, startDate, endDate;
         float discountRate;
         do {
             System.out.print("Enter promotion ID\n>> ");
             promotionID = scanner.next();
             if(promotionID.equals("-1")){
-                return;
+                return false;
             }
             ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT COUNT(*) FROM PROMOTION WHERE PROMOTIONID = '%s'", promotionID));
             getStmt(conn).execute("COMMIT");
@@ -1166,21 +1172,22 @@ public class OSS {
         System.out.print("Enter discount rate\n>> ");
         discountRate =  scanner.nextFloat();
         if(discountRate == -1){
-            return;
+            return false;
         }
         scanner = new Scanner(System.in);
         System.out.print("Enter start date\n>> ");
         startDate =  scanner.next();
         if(startDate.equals("-1")){
-            return;
+            return false;
         }
         System.out.print("Enter end date\n>> ");
         endDate =  scanner.next();
         if(endDate.equals("-1")){
-            return;
+            return false;
         }
         getStmt(conn).execute(String.format("INSERT INTO PROMOTION (PROMOTIONID, DISCOUNTRATE, STARTDATE, ENDDATE) VALUES ('%s', %f, to_date('%s','YYYY-MM-DD'), to_date('%s','YYYY-MM-DD'))",promotionID, discountRate, startDate, endDate));
         getStmt(conn).execute("COMMIT");
+        return true;
     }
     public Boolean getPromotion() throws SQLException {
         String promotionID;
@@ -1222,15 +1229,16 @@ public class OSS {
         if(getPromotion()){
             System.out.println("To confirm deletion. Re-enter the promotion ID.");
             System.out.print(">>");
-            String productName = scanner.next();
-            ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT COUNT(*) FROM PRODUCT WHERE PRODUCTID = '%s'",productName));
+            String promotionID = scanner.next();
+            ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT COUNT(*) FROM PROMOTION WHERE PROMOTIONID = '%s'",promotionID));
             getStmt(conn).execute("COMMIT");
             if(rset.next()){
                 if(rset.getInt(1)==0){
                     return false;
                 }
             }
-            getStmt(conn).execute(String.format("DELETE FROM PRODUCT WHERE PRODUCTID = '%s'",productName));
+            getStmt(conn).execute(String.format("UPDATE PRODUCT SET PROMOTIONID = '',DISCOUNTPRICE = 0  WHERE PROMOTIONID = '%s'",promotionID));
+            getStmt(conn).execute(String.format("DELETE FROM PROMOTION WHERE PROMOTIONID = '%s'",promotionID));
             getStmt(conn).execute("COMMIT");
             return true;
         }
@@ -1280,11 +1288,13 @@ public class OSS {
             }
             System.out.print("New value\n>> ");
             if(input == 1){
-                getStmt(conn).execute(String.format("UPDATE PROMOTION SET %s = %d WHERE PROMOTIONID = '%s'",criterion,scanner.nextInt(),promotionID));
+                float newRate = scanner.nextFloat();
+                getStmt(conn).execute(String.format("UPDATE PROMOTION SET %s = %f WHERE PROMOTIONID = '%s'",criterion,newRate,promotionID));
+                getStmt(conn).execute(String.format("UPDATE PRODUCT SET DISCOUNTPRICE = PRICE*(1- %f) WHERE PROMOTIONID = '%s'",newRate, promotionID));
                 getStmt(conn).execute("COMMIT");
             }
             else{
-                getStmt(conn).execute(String.format("UPDATE PROMOTION SET %s = '%s' WHERE productID = '%s'",criterion,scanner.next(),promotionID));
+                getStmt(conn).execute(String.format("UPDATE PROMOTION SET %s = to_date('%s','YYYY-MM-DD') WHERE productID = '%s'",criterion,scanner.next(),promotionID));
                 getStmt(conn).execute("COMMIT");
             }
 
@@ -1511,4 +1521,264 @@ public class OSS {
         }
         return false;
     }
+    // PUT THIS IN THE END OF OSS
+
+
+    // BELOW FUNCTIONS ARE USED FOR TEST CASES ->
+    public static boolean userExist(String enteredUserID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery(String.format("SELECT * FROM USERDATA WHERE USERID = '%s'", enteredUserID));
+        while (rset.next()){
+            rset.close();
+            connect.close();
+            return true;
+        }
+        getStmt(connect).execute("COMMIT");
+
+
+        return true;
+    }
+    public static String userPwd(String enteredUserID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT password FROM USERDATA WHERE userID = '" + enteredUserID + "'");
+        getStmt(connect).execute("COMMIT");
+        while(rset.next()){
+            return rset.getString(1);
+        }
+        rset.close();
+        connect.close();
+        return "";
+    }
+    public static boolean adminExist(String enteredAdminID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery(String.format("SELECT COUNT(*) FROM ADMINISTRATOR WHERE adminID = '%s'", enteredAdminID));
+        getStmt(connect).execute("COMMIT");
+        while(rset.next() && rset.getInt(1) >= 1){
+            return true;
+        }
+        rset.close();
+        connect.close();
+        return false;
+    }
+    public static String selectAdminPwd(String enteredAdminID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT ADMINPWD FROM ADMINISTRATOR WHERE adminID = '" + enteredAdminID + "'");
+        getStmt(connect).execute("COMMIT");
+        if(rset.next()){
+            return rset.getString(1);
+        }else {
+            return "";
+        }
+    }
+    public static boolean createUser(String enteredUserID, String firstName, String lastName, String enteredPassword,
+                                     String dateOfBirth, String email, String phoneNumber, String address) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        getStmt(connect).execute(String.format("INSERT INTO USERDATA VALUES('%s','%s','%s','%s',to_date('%s','YYYY-MM-DD'),'%s','%s')", enteredUserID, firstName, lastName, enteredPassword, dateOfBirth, email, phoneNumber));
+        getStmt(connect).execute(String.format("INSERT INTO USERADDRESSES VALUES('%s','%s')", enteredUserID, address));
+        getStmt(connect).execute("COMMIT");
+        connect.close();
+        return true;
+    }
+    public static boolean createAdmin(String enteredUserID, String firstName, String lastName, String enteredPassword,
+                                      String dateOfBirth, String email, String phoneNumber) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        getStmt(connect).execute(String.format("INSERT INTO ADMINISTRATOR VALUES('%s','%s','%s','%s',to_date('%s','YYYY-MM-DD'),'%s','%s')", enteredUserID, firstName, lastName, enteredPassword, dateOfBirth, email, phoneNumber));
+        getStmt(connect).execute("COMMIT");
+        connect.close();
+        return true;
+    }
+    public static List<Map<String, Object>> selectReport(String orderByCol, boolean isAsc) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT * FROM PRODUCT ORDER BY "+orderByCol+" " + (isAsc?"ASC":"DESC"));
+        getStmt(connect).execute("COMMIT");
+        List<Map<String, Object>> reports = new ArrayList<>();
+        Map<String, Object> report = null;
+        while(rset.next()) {
+            report = new HashMap<>();
+            report.put("name", rset.getString("name"));
+            report.put("STOCK_QTY", rset.getInt("STOCK_QTY"));
+            report.put("UNITS_SOLD", rset.getInt("UNITS_SOLD"));
+            report.put("PRICE",rset.getInt("PRICE"));
+            report.put("VIEWS",rset.getInt("VIEWS"));
+            report.put("productID",  rset.getString("productID"));
+            reports.add(report);
+        }
+        getStmt(connect).close();
+        return reports;
+    }
+    public static List<Map<String, Object>> selectReportUnion() throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT * FROM PROMOTION t1 JOIN PRODUCT t2 ON t1.PROMOTIONID = t2.PROMOTIONID");
+        getStmt(connect).execute("COMMIT");
+        List<Map<String, Object>> reports = new ArrayList<>();
+        Map<String, Object> report = null;
+        while(rset.next()) {
+            report = new HashMap<>();
+            report.put("PROMOTIONID", rset.getString("PROMOTIONID"));
+            report.put("NAME", rset.getString("NAME"));
+            report.put("DISCOUNTRATE", rset.getFloat("DISCOUNTRATE"));
+            report.put("STARTDATE", rset.getString("STARTDATE"));
+            report.put("ENDDATE", rset.getString("ENDDATE"));
+            report.put("STOCK_QTY", rset.getInt("STOCK_QTY"));
+            report.put("UNITS_SOLD", rset.getInt("UNITS_SOLD"));
+            reports.add(report);
+        }
+        getStmt(connect).close();
+        return reports;
+    }
+    public static List<Map<String, Object>> selectProductBylike(String keyword) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        String query = String.format("SELECT * FROM product WHERE name LIKE '%%%s%%' OR description LIKE '%%%s%%'", keyword, keyword);
+        ResultSet rset = getStmt(connect).executeQuery(query);
+        getStmt(connect).execute("COMMIT");
+        List<Map<String, Object>> products = new ArrayList<>();
+        Map<String, Object> product = null;
+        while(rset.next()) {
+            product = new HashMap<>();
+            product.put("name", rset.getString("name"));
+            product.put("price", rset.getDouble("price"));
+            product.put("discountprice", rset.getDouble("discountprice"));
+            product.put("productID", rset.getString("productID"));
+            products.add(product);
+        }
+        connect.close();
+        return products;
+    }
+    public static List<Map<String, Object>> selectAllProduct() throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT * FROM product");
+        getStmt(connect).execute("COMMIT");
+        List<Map<String, Object>> products = new ArrayList<>();
+        Map<String, Object> product = null;
+        while(rset.next()) {
+            product = new HashMap<>();
+            product.put("name", rset.getString("name"));
+            product.put("price", rset.getDouble("price"));
+            product.put("discountprice", rset.getDouble("discountprice"));
+            product.put("productID", rset.getString("productID"));
+            products.add(product);
+        }
+        connect.close();
+        return products;
+    }
+    public static Map<String, Object> selectProductById(String productID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT * FROM product WHERE productID = '" + productID + "'");
+        getStmt(connect).execute("COMMIT");
+        Map<String, Object> product = null;
+        if(rset.next()) {
+            product = new HashMap<>();
+            product.put("name", rset.getString("name"));
+            product.put("price", rset.getDouble("price"));
+            product.put("discountprice", rset.getDouble("discountprice"));
+            product.put("productID", rset.getString("productID"));
+            product.put("stock_qty", rset.getInt("stock_qty"));
+            product.put("description", rset.getString("description"));
+            product.put("dimension", rset.getString("dimension"));
+            product.put("brand", rset.getString("brand"));
+            product.put("category", rset.getString("category"));
+        }
+        connect.close();
+        return product;
+    }
+    public static int selectStockQtyById(String productID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT STOCK_QTY FROM product WHERE productID = '" + productID + "'");
+        getStmt(connect).execute("COMMIT");
+        if(rset.next()) {
+            return rset.getInt(1);
+        }else{
+            return -1;
+        }
+    }
+    public static String addOrUpdateCart(int input, String userID, String productID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT productID, quantity FROM cart WHERE userID = '" + userID + "' AND productID = '" + productID + "'");
+        String operation = null;
+        if (rset.next()) {
+            getStmt(connect).execute("UPDATE cart SET quantity = " + (input + rset.getInt("quantity")) + " WHERE userID = '" + userID + "' AND productID = '" + productID + "'");
+
+
+            operation =  "update";
+        } else {
+            getStmt(connect).execute("INSERT INTO cart (userID, productID, quantity) VALUES ('" + userID + "', '" + productID + "', " + input + ")");
+            operation = "add";
+        }
+        getStmt(connect).execute("COMMIT");
+        connect.close();
+        return operation;
+    }
+    public static String deleteFromCart(String userID,String productID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        ResultSet rset = getStmt(connect).executeQuery("SELECT name FROM product WHERE productID = '" + productID + "'");
+        getStmt(connect).execute("DELETE FROM cart WHERE productID = '" + productID + "' AND userID = '" + userID + "'");
+        String checkQuery = "SELECT PRODUCTID FROM orderdetails WHERE PRODUCTID = '" + productID + "'";
+        ResultSet checkResult = getStmt(connect).executeQuery(checkQuery);
+        getStmt(connect).execute ("COMMIT");
+        if (rset.next()) {
+            String productName = rset.getString("name");
+            if (checkResult.next()) {
+                getStmt(connect).execute("DELETE FROM orderdetails WHERE PRODUCTID = '" + productID + "' AND USERID = '" + userID + "'");
+                getStmt(connect).execute ("COMMIT");
+            }
+            connect.close();
+            return productName;
+        }
+        getStmt(connect).execute("COMMIT");
+        return null;
+    }
+    public static List<Map <String, Object>> selectCartByUserId(String userID) throws SQLException {
+        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+        OracleConnection connect = (OracleConnection) DriverManager.getConnection("jdbc:oracle:thin:@studora.comp.polyu.edu.hk:1521:dbms", "\"22099885d\"", "jnhhpagt");
+        setStmt(connect.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE));
+        String query = "SELECT p.productID, p.name, p.price, p.discountprice, c.quantity " +
+                "FROM cart c " +
+                "JOIN product p ON c.productID = p.productID " +
+                "WHERE c.userID = '" + userID + "'";
+        ResultSet rset = getStmt(connect).executeQuery(query);
+        getStmt(connect).execute("COMMIT");
+        List<Map<String, Object>> carts = new ArrayList<>();
+        Map<String, Object> cart = null;
+        while(rset.next()) {
+            cart = new HashMap<>();
+            cart.put("productID", rset.getString("productID"));
+            cart.put("name", rset.getString("name"));
+            cart.put("quantity", rset.getInt("quantity"));
+            cart.put("price", rset.getDouble("price"));
+            cart.put("discountprice", rset.getDouble("discountprice"));
+            carts.add(cart);
+        }
+        connect.close();
+        return carts;
+    }
+
+
 }
