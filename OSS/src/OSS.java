@@ -254,7 +254,7 @@ public class OSS {
         enteredPassword = scanner.next();
         getStmt(conn).execute(String.format("INSERT INTO ADMINISTRATOR VALUES('%s','%s','%s','%s',to_date('%s','YYYY-MM-DD'),'%s','%s')", enteredUserID, firstName, lastName, enteredPassword, dateOfBirth, email, phoneNumber));
         getStmt(conn).execute("COMMIT");
-        System.out.println("The account '" + enteredUserID + "' has been successfully created.");
+        System.out.println("\nThe account '" + enteredUserID + "' has been successfully created.");
         userID = enteredUserID;
         return true;
     }
@@ -267,11 +267,12 @@ public class OSS {
         String input = scanner.next();
         switch(input) {
             case "1" -> { // selling report
-                System.out.println("Please select your preferred order:");
+                System.out.println("\nPlease select your preferred order:");
                 System.out.println("1. Descending order by views time");
                 System.out.println("2. Ascending order by views time");
                 System.out.println("3. Descending order by Sales volume");
                 System.out.println("4. Ascending order by Sales volume");
+                System.out.print(">> ");
                 int optionChosen = scanner.nextInt();
                 ResultSet rset = null;
                 switch (optionChosen) {
@@ -304,13 +305,13 @@ public class OSS {
                         getStmt(conn).execute("COMMIT");
                     }
                     default -> {
-                        System.out.println("Wrong option, please choose again.");
+                        System.out.println("\nWrong option, please choose again.");
                         generateReport();
                     }
                 }
                 assert rset != null;
                 if (!rset.next()) {
-                    System.out.println("no data founded");
+                    System.out.println("\nNo data found");
                     return;
                 }
                 int count = 0;
@@ -339,7 +340,7 @@ public class OSS {
                 getStmt(conn).execute("COMMIT");
 
                 if (!rset.next()) {
-                    System.out.println("No records found.");
+                    System.out.println("\nNo records found.");
                     return;
                 }
                 int count = 0;
@@ -365,7 +366,7 @@ public class OSS {
             case "0" -> {
                 return;
             }
-            default -> {System.out.println("Wrong option, please try again");
+            default -> {System.out.println("\nWrong option, please try again");
                 generateReport();}
         }
 
@@ -473,16 +474,16 @@ public class OSS {
                         if (scanner.hasNextDouble()) {
                             maxPrice = scanner.nextDouble();
                             if (minPrice > maxPrice) {
-                                System.out.println("Invalid input. The minimum price must be less than or equal to the maximum price.");
+                                System.out.println("\nInvalid input. The minimum price must be less than or equal to the maximum price.");
                                 isValidInput = false;
                             }
                         } else {
-                            System.out.println("Invalid input. Please enter a valid maximum price.");
+                            System.out.println("\nInvalid input. Please enter a valid maximum price.");
                             scanner.next();
                             isValidInput = false;
                         }
                     } else {
-                        System.out.println("Invalid input. Please enter a valid minimum price.");
+                        System.out.println("\nInvalid input. Please enter a valid minimum price.");
                         scanner.next();
                         isValidInput = false;
                     }
@@ -496,11 +497,11 @@ public class OSS {
         rset = getStmt(conn).executeQuery(query);
         getStmt(conn).execute("COMMIT");
         if (!rset.next()) {
-            System.out.println("Product not found.");
+            System.out.println("\nProduct not found.");
             return false;
         }
         int count = 0;
-        System.out.println("Here is the list of product(s):");
+        System.out.println("\nHere is the list of product(s):");
         do {
             String productName = rset.getString("name");
             double price = rset.getDouble("price");
@@ -529,7 +530,7 @@ public class OSS {
         getStmt(conn).execute("COMMIT");
 
         if (!rset.next()) {
-            System.out.println("Product not found.");
+            System.out.println("\nProduct not found.");
             return false;
         }
         int count = 0;
@@ -565,14 +566,14 @@ public class OSS {
             System.out.print("\nPlease input the product number (or 0 to cancel):\n>> ");
             inputStr = scanner.next();
             if (inputStr.isEmpty() || !inputStr.matches("\\d+")) {
-                System.out.println("Invalid input. Please enter a valid product number.");
+                System.out.println("\nInvalid input. Please enter a valid product number.");
                 continue;
             }
             input = Integer.parseInt(inputStr);
             if (input == 0) {
                 return false;
             } else if (input < 1 || input > result.size()) {
-                System.out.println("Invalid input. Please enter a valid product number.");
+                System.out.println("\nInvalid input. Please enter a valid product number.");
             } else {
                 break;
             }
@@ -638,7 +639,7 @@ public class OSS {
                 System.out.println("\nOnly " + stock + " item(s) remaining.");
             }
             if(input < 1) {
-                System.out.println("Amount has to be at least 1.");
+                System.out.println("\nAmount has to be at least 1.");
             }
         } while ((inputStr.isEmpty() || !inputStr.matches("\\d+")) || input > stock || input < 1);
 
@@ -646,14 +647,14 @@ public class OSS {
         if (rset.next()) {
             getStmt(conn).execute("UPDATE cart SET quantity = " + (input + rset.getInt("quantity")) + " WHERE userID = '" + userID + "' AND productID = '" + productID + "'");
             getStmt(conn).execute ("COMMIT");
-            System.out.println("The quantity of the product with ID '" + productID + "' has been updated in the cart.");
+            System.out.println("\nThe quantity of the product with ID '" + productID + "' has been updated in the cart.");
         } else {
             getStmt(conn).execute("INSERT INTO cart (userID, productID, quantity) VALUES ('" + userID + "', '" + productID + "', " + input + ")");
 
             rset = getStmt(conn).executeQuery("SELECT name FROM product WHERE productID = '" + productID + "'");
             getStmt(conn).execute("COMMIT");
             if(rset.next()) {
-                System.out.println("The product '" + rset.getString("name") + "' has been successfully added to cart.");
+                System.out.println("\nThe product '" + rset.getString("name") + "' has been successfully added to cart.");
             }
         }
         getStmt(conn).execute("COMMIT");
@@ -671,7 +672,7 @@ public class OSS {
                 getStmt(conn).execute("DELETE FROM orderdetails WHERE PRODUCTID = '" + productID + "' AND USERID = '" + userID + "'");
                 getStmt(conn).execute ("COMMIT");
             }
-            System.out.println("The product '" + productName + "' has been successfully removed from cart.");
+            System.out.println("\nThe product '" + productName + "' has been successfully removed from cart.");
         }
         getStmt(conn).execute("COMMIT");
     }
@@ -732,7 +733,7 @@ public class OSS {
     }
     public boolean checkout() throws SQLException {
         if (!viewCart()) {
-            System.out.println("Cannot checkout since cart is empty.");
+            System.out.println("\nCannot checkout since cart is empty.");
             return false;
         }
         ResultSet rset = getStmt(conn).executeQuery("SELECT p.productID, p.stock_qty, p.name, p.price,p.discountprice, c.quantity FROM cart c JOIN product p ON c.productID = p.productID WHERE c.userID = '" + userID + "'");
@@ -754,7 +755,7 @@ public class OSS {
                     else if(type.equals("y")){
                         break;
                     }
-                    System.out.print("Invalid input. Input 'y' or 'n'.\n>> ");
+                    System.out.print("\nInvalid input. Input 'y' or 'n'.\n>> ");
                 }
                 quantity = stock;
                 getStmt(conn).execute("UPDATE CART SET QUANTITY = " + quantity +" WHERE USERID = '" + userID + "' AND PRODUCTID = '" + productID + "'");
@@ -776,7 +777,7 @@ public class OSS {
                 scanner = new Scanner(System.in);
                 input = scanner.nextLine();
                 if (!(input.equals("1") || input.equals("2") || input.equals("0"))) {
-                    System.out.println("Invalid input. Please enter 1, 2, or 0.");
+                    System.out.println("\nInvalid input. Please enter 1, 2, or 0.");
                 }
             } while (!(input.equals("1") || input.equals("2") || input.equals("0")));
             String transport = "";
@@ -810,7 +811,7 @@ public class OSS {
             scanner = new Scanner(System.in);
             input = scanner.nextLine();
             if (!(input.equals("1") || input.equals("2") || input.equals("0"))) {
-                System.out.println("Invalid input. Please enter 1, 2, or 0.");
+                System.out.println("\nInvalid input. Please enter 1, 2, or 0.");
             }
         } while (!(input.equals("1") || input.equals("2") || input.equals("0")));
         switch (input) {
@@ -844,14 +845,14 @@ public class OSS {
                 System.out.print("\nPlease input the address number (or 0 to cancel):\n>> ");
                 inputStr = scanner.next();
                 if (inputStr.isEmpty() || !inputStr.matches("\\d+")) {
-                    System.out.println("Invalid input. Please enter a valid address number.");
+                    System.out.println("\nInvalid input. Please enter a valid address number.");
                     continue;
                 }
                 inputInt = Integer.parseInt(inputStr);
                 if (inputInt == 0) {
                     return;
                 } else if (inputInt < 1 || inputInt > addresses.size()) {
-                    System.out.println("Invalid input. Please enter a valid address number.");
+                    System.out.println("\nInvalid input. Please enter a valid address number.");
                 } else {
                     break;
                 }
@@ -908,7 +909,7 @@ public class OSS {
                 System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             }
         }
-        System.out.println("Thank you for shopping!");
+        System.out.println("\nThank you for shopping!");
     }
     public boolean addProduct() throws SQLException {
         String productID, inventoryID, name, brand, category, description, dimension;
@@ -917,7 +918,7 @@ public class OSS {
 
         //product ID check
         do {
-            System.out.print("Enter product name\n>> ");
+            System.out.print("\nEnter product name\n>> ");
             productID = name = scanner.next();
             if(productID.equals("-1")){
                 return false;
@@ -928,7 +929,7 @@ public class OSS {
                 if (rset.getInt(1) == 0) {
                     break;
                 }
-                System.out.println("Product name exists!");
+                System.out.println("\nProduct name exists!");
             }
         } while(true);
 
@@ -1023,8 +1024,8 @@ public class OSS {
     }
     public boolean removeProduct() throws SQLException {
         if(getProduct()){
-            System.out.println("To confirm deletion. Re-enter the product name.");
-            System.out.print(">>");
+            System.out.println("\nTo confirm deletion. Re-enter the product name.");
+            System.out.print(">> ");
             String productName = scanner.next();
             ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT COUNT(*) FROM PRODUCT WHERE PRODUCTID = '%s'",productName));
             getStmt(conn).execute("COMMIT");
@@ -1055,7 +1056,7 @@ public class OSS {
             System.out.println("11. Stock_Qty");
             System.out.println("12. Units_Sold");
             System.out.println("0. Cancel");
-            System.out.print("Select criterion number to change\n>> ");
+            System.out.print("\nSelect criterion number to change\n>> ");
             int input = scanner.nextInt();
 
             String criterion = "";
@@ -1155,7 +1156,7 @@ public class OSS {
         String promotionID, startDate, endDate;
         float discountRate;
         do {
-            System.out.print("Enter promotion ID\n>> ");
+            System.out.print("\nEnter promotion ID\n>> ");
             promotionID = scanner.next();
             if(promotionID.equals("-1")){
                 return false;
@@ -1166,7 +1167,7 @@ public class OSS {
                 if (rset.getInt(1) == 0) {
                     break;
                 }
-                System.out.println("Promotion name has already existed!");
+                System.out.println("\nPromotion name has already existed!");
             }
         } while(true);
         System.out.print("Enter discount rate\n>> ");
@@ -1227,8 +1228,8 @@ public class OSS {
     }
     public boolean removePromotion() throws SQLException{
         if(getPromotion()){
-            System.out.println("To confirm deletion. Re-enter the promotion ID.");
-            System.out.print(">>");
+            System.out.println("\nTo confirm deletion. Re-enter the promotion ID.");
+            System.out.print(">> ");
             String promotionID = scanner.next();
             ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT COUNT(*) FROM PROMOTION WHERE PROMOTIONID = '%s'",promotionID));
             getStmt(conn).execute("COMMIT");
@@ -1250,7 +1251,7 @@ public class OSS {
             System.out.println("2. StartDate");
             System.out.println("3. EndDate");
             System.out.println("0. Cancel");
-            System.out.print("Select criterion number to change\n>> ");
+            System.out.print("\nSelect criterion number to change\n>> ");
             int input = scanner.nextInt();
             String criterion = "";
             while(true) {
@@ -1276,8 +1277,8 @@ public class OSS {
                     break;
                 }
             }
-            System.out.println("To confirm change. Re-enter the promotion ID.");
-            System.out.print(">>");
+            System.out.println("\nTo confirm change. Re-enter the promotion ID.");
+            System.out.print(">> ");
             String promotionID = scanner.next();
             ResultSet rset = getStmt(conn).executeQuery(String.format("SELECT COUNT(*) FROM PROMOTION WHERE PROMOTIONID = '%s'",promotionID));
             getStmt(conn).execute("COMMIT");
@@ -1329,7 +1330,7 @@ public class OSS {
         String comment = "";
         float rating = 0;
         boolean review = false;
-        System.out.println("We treasure all of your responses.");
+        System.out.println("\nWe treasure all of your responses.");
         System.out.println("Please fill in the form below");
         System.out.println("--------------------------");
         System.out.println("If you want to cancel the process,\nPlease input CANCEL in the input field");
@@ -1341,39 +1342,38 @@ public class OSS {
             else if (comment.equals ("CANCEL")){System.out.println ("Thank You for your time"); return false;}
         }
         while (rating == 0) {
-            System.out.println("How much would you rate this product (0.0 - 5.0)");
+            System.out.println("\nHow much would you rate this product (0.0 - 5.0)");
             String input = scanner.next();
             if (!input.equals("0")){
                 rating = Float.parseFloat(input);
             }
-            else if(input.equals("CANCEL")){System.out.println ("Thank You for your time"); return false;}
-            else{System.out.println ("Please provide a number from 0.0 - 5.0");}
+            else if(input.equals("CANCEL")){System.out.println ("\nThank You for your time"); return false;}
+            else{System.out.println ("\nPlease provide a number from 0.0 - 5.0");System.out.print(">> ");}
         }
         getStmt(conn).execute(String.format("INSERT INTO REVIEW VALUES ('%s', '%s', '%s', %f)", userID,productID,comment,rating));
         getStmt(conn).execute("COMMIT");
-        System.out.println ("Thank You for your time. Your review has been successfully updated");
+        System.out.println ("\nThank You for your time. Your review has been successfully updated");
         return true;
     }
     public boolean changeTransportationFee() throws SQLException {
-        System.out.println("Select transportation fee to change");
+        System.out.println("\nSelect transportation fee to change");
         System.out.println("1. Basic");
         System.out.println("2. Express");
         System.out.println("0. Cancel");
-        System.out.print(">>");
+        System.out.print(">> ");
         int input = scanner.nextInt();
         while(input!=1 && input!=2 && input!=0){
-            System.out.println("Invalid input! Enter 0, 1 or 2");
+            System.out.println("\nInvalid input! Enter 0, 1 or 2");
             System.out.print(">> ");
             input = scanner.nextInt();
         }
         if(input == 0){
             return false;
         }
-        System.out.print("Enter new fee\n>> ");
+        System.out.print("\nEnter new fee\n>> ");
         float fee = scanner.nextFloat();
         while(fee<0){
-            System.out.println("New fee cannot be less than $0");
-            System.out.print("Re-enter new fee\n>> ");
+            System.out.print("\nNew fee cannot be less than $0. Re-enter new fee\n>> ");
             fee = scanner.nextFloat();
         }
         if(input == 1){
@@ -1383,7 +1383,7 @@ public class OSS {
             getStmt(conn).execute("UPDATE TRANSPORT SET COST = "+fee+" WHERE TRANSPORTID = 'B1'");
 
         }
-        System.out.println("Fee update successfully.");
+        System.out.println("\nFee update successfully.");
         return true;
     }
     public boolean editProfile() throws SQLException {
@@ -1411,14 +1411,14 @@ public class OSS {
             System.out.print(">>");
             input = scanner.next();
             while (!(input.equals("y") || input.equals("n"))) {
-                System.out.println("Invalid Input. Please enter y | n");
+                System.out.println("\nInvalid Input. Please enter y | n");
                 System.out.print(">> ");
                 input = scanner.next();
             }
             if (input.equals("n")) {
                 return false;
             } else {
-                System.out.print("Please enter your new address: ");
+                System.out.print("\nPlease enter your new address: ");
                 input = scanner.next(); // can consider checking if email address is still the same
                 getStmt(conn).execute(String.format("UPDATE USERDATA SET EMAIL = '%s' WHERE USERID = '%s'", input, userID));
                 getStmt(conn).execute("COMMIT");
@@ -1439,7 +1439,7 @@ public class OSS {
             scanner.skip("\n");
             chc = scanner.next();
             while (!(chc.equals("y") || chc.equals("n"))) {
-                System.out.print("Invalid Input. Please follow the following instructions -");
+                System.out.print("\nInvalid Input. Please follow the following instructions -");
                 System.out.println("\nContinue changing password?");
                 System.out.println("y - yes | n - no");
                 System.out.print(">> ");
@@ -1521,8 +1521,6 @@ public class OSS {
         }
         return false;
     }
-    // PUT THIS IN THE END OF OSS
-
 
     // BELOW FUNCTIONS ARE USED FOR TEST CASES ->
     public static boolean userExist(String enteredUserID) throws SQLException {
