@@ -1,10 +1,10 @@
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import org.testng.annotations.Test;
-import static org.testng.AssertJUnit.*;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
-
+// ADD JUNIT TO CLASS PATH IS REQUIRED
 
 public class OSS_TestCase {
 
@@ -56,7 +56,7 @@ public class OSS_TestCase {
     @Test
     public void testCreateAdmin() throws SQLException {
         // Test create a admin
-        boolean addResult = OSS.createAdmin("tester2", "test","test","test",
+        boolean addResult = OSS.createAdmin("tester7", "test","test","test",
                 "2023-12-02","testA@test.com","12345678");
         assertTrue("Added an admin successfully", addResult);
     }
